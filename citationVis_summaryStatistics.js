@@ -29,7 +29,7 @@ citationVis.summaryStatistics = (function() {
 			var minYear = d3.min(cleanedLinks, function(d) { return d.targetYear>0 ? d.targetYear : null; });
 			// Get current year (using today's date):
 			var todayYear = new Date().getFullYear();
-			var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<todayYear ? d.sourceYear : null; });
+			var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<=todayYear ? d.sourceYear : null; });
 			return [minYear, maxYear];
 		}
 
@@ -45,8 +45,7 @@ citationVis.summaryStatistics = (function() {
 		function getCitationCountsPerYear(graph) {
 			var citationCountsPerYear = getEmptyCountData(graph.graph.yearRange);
 			var cleanedLinks = cleanLinks(graph.links);
-			console.log(citationCountsPerYear);
-			cleanedLinks.forEach(function(d) {
+			cleanedLinks.forEach(function(d, i) {
 				var thisSourceYear = d.sourceYear;
 				var dataThisYear = citationCountsPerYear.filter(function(dd) { return dd.year===thisSourceYear; })[0];
 				dataThisYear.count++;

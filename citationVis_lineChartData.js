@@ -34,7 +34,7 @@ citationVis.lineChartData = (function() {
 		var minYear = d3.min(cleanedLinks, function(d) { return d.targetYear>0 ? d.targetYear : null; });
 		// Get current year (using today's date):
 		var todayYear = new Date().getFullYear();
-		var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<todayYear ? d.sourceYear : null; });
+		var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<=todayYear ? d.sourceYear : null; });
 		return [minYear, maxYear];
 	}
 

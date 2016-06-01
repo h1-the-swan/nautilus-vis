@@ -46,6 +46,12 @@ citationVis.egoGraphData = (function(maxNodes) {
 		// 		notEgoNodes.splice(0, 0, notEgoNodes.splice(i, 1)[0]);
 		// 	}
 		// }
+		// Move papers that have a DomainID to the front (going in reverse order to preserve Eigenfactor ordering)
+		for (var i = notEgoNodes.length-1; i>=0; i--) {
+			if ( notEgoNodes[i].DomainID != 0 ) {
+				notEgoNodes.splice(0, 0, notEgoNodes.splice(i, 1)[0]);
+			}
+		}
 		// console.log(c);
 		// Take the first n items, where n = maxNodes
 		console.log(maxNodes);

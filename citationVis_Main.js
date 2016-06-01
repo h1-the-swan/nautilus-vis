@@ -10,28 +10,28 @@ function getQueryVariable(variable)
     return(false);
 }
 
-// var json_fname = 'static/data.json';
-var json_fname = 'static/cached_data/data.json';
-// http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
-json_fname = json_fname + '?' + Math.floor(Math.random() * 1000);
-var selectedID = getQueryVariable('id');
-console.log(selectedID);
-if (window.location.pathname === "/pewscholars") {
-	if (!selectedID) {
-		selectedID = "11";
-	}
-	json_fname = 'static/pewdata/data_' + selectedID + '.json';
-	if (getQueryVariable('extendedData')) {
-		// json_fname = 'static/pewdata/alldata/' + json_fname;
-		json_fname = 'static/pewdata/alldata/data_' + selectedID + '.json';
-	}
-}
-if (window.location.pathname === "/healthra") {
-	if (!selectedID) {
-		selectedID = "0";
-	}
-	json_fname = 'static/healthra/data/data_' + selectedID + '.json';
-}
+// // var json_fname = 'static/data.json';
+// var json_fname = 'static/cached_data/data.json';
+// // http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
+// json_fname = json_fname + '?' + Math.floor(Math.random() * 1000);
+// var selectedID = getQueryVariable('id');
+// console.log(selectedID);
+// if (window.location.pathname === "/pewscholars") {
+// 	if (!selectedID) {
+// 		selectedID = "11";
+// 	}
+// 	json_fname = 'static/pewdata/data_' + selectedID + '.json';
+// 	if (getQueryVariable('extendedData')) {
+// 		// json_fname = 'static/pewdata/alldata/' + json_fname;
+// 		json_fname = 'static/pewdata/alldata/data_' + selectedID + '.json';
+// 	}
+// }
+// if (window.location.pathname === "/healthra") {
+// 	if (!selectedID) {
+// 		selectedID = "0";
+// 	}
+// 	json_fname = 'static/healthra/data/data_' + selectedID + '.json';
+// }
 
 //delete this
 // json_fname = 'static/healthra/org_8.json'
@@ -85,7 +85,7 @@ citationVis.yearTickClickEventListener = function() {
 
 d3.select('#infoDiv').append('p').text('Loading...');
 
-d3.json(json_fname, function(error, graph) {
+d3.json(citationvis_data, function(error, graph) {
 	if (error) throw error;
 
 	// Get the most common Domain IDs for the ego author's papers

@@ -175,10 +175,10 @@ egoGraphVis.prototype.init = function() {
 		.domain([0, eigenFactorMax])
 		.range([0, 1]);
 	self.data.nodes.forEach(function(d) {
-		if (d.nodeType === 'author') {
-			d.radius = 10;
-		} else if (d.nodeType === 'paper') {
+		if (d.nodeType === 'paper') {
 			d.radius = 4.5 + (self.eigenFactorScale(d.EF) * 10);
+		} else {
+			d.radius = 10;
 		}
 	});
 
@@ -405,7 +405,7 @@ egoGraphVis.prototype.init = function() {
     placeNodes();
 
 	self.legendInit();
-	self.addAuthorImage();
+	// self.addAuthorImage();
 	self.addEventListeners();
 
     self.yearTextDisplay = self.svg.append('svg:text')
