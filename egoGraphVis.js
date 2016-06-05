@@ -405,7 +405,7 @@ egoGraphVis.prototype.init = function() {
     placeNodes();
 
 	self.legendInit();
-	// self.addAuthorImage();
+	self.addAuthorImage();
 	self.addEventListeners();
 
     self.yearTextDisplay = self.svg.append('svg:text')
@@ -568,51 +568,54 @@ egoGraphVis.prototype.legendInit = function() {
 };
 
 egoGraphVis.prototype.addAuthorImage = function() {
-    var self = this;
-    self.authorImageDiv = self.svg.append('foreignObject').attr('class', 'externalObject')
-        .attr('x', 0)
-        .attr('y', self.graphDimensions.height/2 - 50)
-        // .attr('height', self.graphDimensions.height/5)
-		.attr('height', '100%')
-        .attr('width', self.graphDimensions.height/5)
-        .append('xhtml:div')
-        .attr('id', 'authorImageDiv');
-    self.authorImageDiv
-        .append('xhtml:p')
-        .html('<p>' + self.data.nodes[0].AuthorName.capitalize() + '</p>');
+	var self = this;
+	if (self.egoNode.hasOwnProperty('AuthorName')) {
+		
+		self.authorImageDiv = self.svg.append('foreignObject').attr('class', 'externalObject')
+			.attr('x', 0)
+			.attr('y', self.graphDimensions.height/2 - 50)
+			// .attr('height', self.graphDimensions.height/5)
+			.attr('height', '100%')
+			.attr('width', self.graphDimensions.height/5)
+			.append('xhtml:div')
+			.attr('id', 'authorImageDiv');
+		self.authorImageDiv
+			.append('xhtml:p')
+			.html('<p>' + self.data.nodes[0].AuthorName.capitalize() + '</p>');
 
-	var authorImageContainer = self.authorImageDiv
-		.append('xhtml')
-		.attr('id', 'authorImageContainer');
+		var authorImageContainer = self.authorImageDiv
+			.append('xhtml')
+			.attr('id', 'authorImageContainer');
 
-	// Add content for HRA authors
-	var authorOrg = self.data.nodes[0].organization;
-	console.log(authorOrg);
-	if (typeof authorOrg != 'undefined') {
-		d3.tsv("static/healthra/orgs_with_links.tsv", function(error, org_data) {
-			if (error) throw error;
-			var pstyle = 'style="margin: 0; padding: 0; font-size: .85em"'
-			console.log(org_data);
-			for (var i = 0, len = org_data.length; i < len; i++) {
-				if (org_data[i]['org_name'] == authorOrg) {
-					var nameFromTSV = org_data[i]['match_name'];
-					if ( (typeof nameFromTSV != 'undefined') && (nameFromTSV != '') ) {
-						var orgLink = org_data[i]['link'];
-						var orgImgUrl = org_data[i]['img_url'];
-						self.authorImageDiv
-							.append('xhtml:p')
-							.html('<a href="' + orgLink + '" target="_blank"><p ' + pstyle + '>' + nameFromTSV + '</p>');
-						var authorImage = addImage(orgImgUrl);
-						authorImage.style('cursor', 'pointer');
-						authorImage.on('click', function() { console.log(orgLink); window.open(orgLink, '_blank')});
-					} else {
-						self.authorImageDiv
-							.append('xhtml:p')
-							.html('<p style="margin: 0; padding: 0; font-size: .85em">' + authorOrg + '</p>');
+		// Add content for HRA authors
+		var authorOrg = self.data.nodes[0].organization;
+		console.log(authorOrg);
+		if (typeof authorOrg != 'undefined') {
+			d3.tsv("static/healthra/orgs_with_links.tsv", function(error, org_data) {
+				if (error) throw error;
+				var pstyle = 'style="margin: 0; padding: 0; font-size: .85em"'
+				console.log(org_data);
+				for (var i = 0, len = org_data.length; i < len; i++) {
+					if (org_data[i]['org_name'] == authorOrg) {
+						var nameFromTSV = org_data[i]['match_name'];
+						if ( (typeof nameFromTSV != 'undefined') && (nameFromTSV != '') ) {
+							var orgLink = org_data[i]['link'];
+							var orgImgUrl = org_data[i]['img_url'];
+							self.authorImageDiv
+								.append('xhtml:p')
+								.html('<a href="' + orgLink + '" target="_blank"><p ' + pstyle + '>' + nameFromTSV + '</p>');
+							var authorImage = addImage(orgImgUrl);
+							authorImage.style('cursor', 'pointer');
+							authorImage.on('click', function() { console.log(orgLink); window.open(orgLink, '_blank')});
+						} else {
+							self.authorImageDiv
+								.append('xhtml:p')
+								.html('<p style="margin: 0; padding: 0; font-size: .85em">' + authorOrg + '</p>');
+						}
 					}
 				}
-			}
-		});
+			});
+	}
 	}
 
 	function addImage(authorImageSrc) {
@@ -686,12 +689,13 @@ egoGraphVis.prototype.addEventListeners = function() {
     // Add event listener to nodes for tooltip:
     d3.selectAll('.node')
         .on('mouseover', function(d) {
-            var tooltipHtml = self.makeTooltip(d);
-            self.tooltip = self.tooltip
-                .html(tooltipHtml)
-                .style('visibility', 'visible')
-                .style('border-style', 'solid')
-                .style('border-color', d.color);
+			self.makeTooltip(d, function(tooltipHtml) {
+				self.tooltip = self.tooltip
+					.html(tooltipHtml)
+					.style('visibility', 'visible')
+					.style('border-style', 'solid')
+					.style('border-color', d.color);
+			});
         })
         .on('mousemove', function() {
             self.tooltip = self.tooltip
@@ -704,44 +708,97 @@ egoGraphVis.prototype.addEventListeners = function() {
 
 };
 
-egoGraphVis.prototype.makeTooltip = function(d) {
+egoGraphVis.prototype.makeTooltip = function(d, callback) {
     var self = this;
 
 	// Account for author node:
-	if (d.nodeType === 'author') {
+	if (d.nodeType === 'author' || d.nodeType === '') {
 		var tooltipHtml = '<p class="authorName">Author: ' + d.AuthorName + '</p>';
 		if (d.pew_Class) {
 			tooltipHtml = tooltipHtml + '<p class="pewClass">Pew Class: ' + d.pew_Class + '</p>';
 		}
-		var numberOfPubs = d.PaperIDList.length;
+		var numberOfPubs = d.papers.length;
 		tooltipHtml = tooltipHtml + '<p class="numberOfPubs">Number of Publications: ' + numberOfPubs + '</p>';
-		return tooltipHtml;
+		// return tooltipHtml;
+		callback(tooltipHtml);
 	}
 
 	// Otherwise: make a tooltip for a paper node
-    var authorList = [];
-    d.authors.forEach(function(a) {
-        var thisAuthorStrList = a[1].split(' ');
-        // thisAuthorStrList = thisAuthorStrList.map(function(x) { return x.charAt(0).toUpperCase() + x.slice(1).toLowerCase(); });
-        thisAuthorStrList = thisAuthorStrList.map(function(x) { if (x === x.toUpperCase()) return x.capitalize(); else return x;});
-        // var thisAuthor = a.Name.charAt(0).toUpperCase() + a.Name.slice(1).toLowerCase();
-        var thisAuthor = thisAuthorStrList.join(' ');
-        authorList.push(thisAuthor);
-    });
+	function getAuthorList(authors) {
+		var authorList = [];
+		authors.forEach(function(a) {
+			var thisAuthorStrList = a[1].split(' ');
+			// thisAuthorStrList = thisAuthorStrList.map(function(x) { return x.charAt(0).toUpperCase() + x.slice(1).toLowerCase(); });
+			// thisAuthorStrList = thisAuthorStrList.map(function(x) { if (x === x.toUpperCase()) return x.capitalize(); else return x;});
+			thisAuthorStrList = thisAuthorStrList.map(function(x) { if (x != x.toUpperCase()) return x.capitalize(); else return x;});
+			// var thisAuthor = a.Name.charAt(0).toUpperCase() + a.Name.slice(1).toLowerCase();
+			var thisAuthor = thisAuthorStrList.join(' ');
+			authorList.push(thisAuthor);
+		});
+		return authorList;
+	}
+	function getTitle(paperid, callback) {
+		//
+		$.ajax({
+			dataType: 'json',
+			url: $SCRIPT_ROOT + '/_vis_get_title',
+			data: {paperid: paperid},
+			success: function(result) {
+				callback(result['title']);
+			}
+		});
+	}
+	function makeHtml() {
+		var tooltipHtml = '<p class="paperID">pID: ' + d.id + '</p>';
+		tooltipHtml = tooltipHtml + '<p class="paperTitle">';
+		tooltipHtml = tooltipHtml + d.Title;
+		tooltipHtml = tooltipHtml + '</p>';
+		tooltipHtml = tooltipHtml + '<p class="paperYear">' + d.Year + '</p>';
+		var authorStrList = [];
+		d.authorList.forEach(function(a) {
+			authorStrList.push(a)
+		});
+		var authorList = authorStrList.join(', ');
+		tooltipHtml = tooltipHtml + '<p class="paperAuthor">Authors: ' + authorList + '</p>';
+		return tooltipHtml;
+	}
+	if ( d.hasOwnProperty('authors') ) {
+		var authorList = getAuthorList(d.authors);
+		d.authorList = authorList;
+		if ( d.hasOwnProperty('Title') ){
+			var tooltipHtml = makeHtml();
+			callback(tooltipHtml);
+		} else {
+			getTitle(d.id, function(title) {
+				d.Title = title;
+				var tooltipHtml = makeHtml();
+				callback(tooltipHtml);
+			});
+		}
+	} else {
+		$.ajax({
+			dataType: 'json',
+			url: $SCRIPT_ROOT + '/_vis_get_authorinfo',
+			data: {authorids: JSON.stringify(d.AuthorIDList)},
+			success: function(result) {
+				d.authors = result['authors'];
+				var authorList = getAuthorList(d.authors)
+				d.authorList = authorList;
+				if ( d.hasOwnProperty('Title') ){
+					var tooltipHtml = makeHtml();
+					callback(tooltipHtml);
+				} else {
+					getTitle(d.id, function(title) {
+						d.Title = title;
+						var tooltipHtml = makeHtml();
+						callback(tooltipHtml);
+					});
+				}
+			}
+		});
+
+	}
     
-    d.authorList = authorList;
-    var tooltipHtml = '<p class="paperID">pID: ' + d.id + '</p>';
-    tooltipHtml = tooltipHtml + '<p class="paperTitle">';
-    tooltipHtml = tooltipHtml + d.Title;
-    tooltipHtml = tooltipHtml + '</p>';
-    tooltipHtml = tooltipHtml + '<p class="paperYear">' + d.Year + '</p>';
-    var authorStrList = [];
-    d.authorList.forEach(function(a) {
-        authorStrList.push(a)
-    });
-    var authorList = authorStrList.join(', ');
-    tooltipHtml = tooltipHtml + '<p class="paperAuthor">Authors: ' + authorList + '</p>';
-    return tooltipHtml;
 };
 
 egoGraphVis.prototype.revealEgoNode = function() {
