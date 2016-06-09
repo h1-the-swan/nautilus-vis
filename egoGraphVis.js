@@ -712,7 +712,7 @@ egoGraphVis.prototype.makeTooltip = function(d, callback) {
     var self = this;
 
 	// Account for author node:
-	if (d.nodeType === 'author' || d.nodeType === '') {
+	if (d.nodeType === 'author' || d.nodeType === '' || d.nodeType === 'venue') {
 		var tooltipHtml = '<p class="authorName">Author: ' + d.AuthorName + '</p>';
 		if (d.pew_Class) {
 			tooltipHtml = tooltipHtml + '<p class="pewClass">Pew Class: ' + d.pew_Class + '</p>';

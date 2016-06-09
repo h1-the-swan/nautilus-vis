@@ -105,9 +105,9 @@ lineChartByYear.prototype.init = function() {
 	// 	.attr('height', self.lineChartDimensions.height);
 
     // self.x.domain([self.strToYear("1968"), self.strToYear("2013")]);
-	// self.x.domain(self.yearRange);
+	self.x.domain(self.yearRange);
 	// Hack to cut off x axis at 2010:
-	self.x.domain([self.yearRange[0], 2010]);
+	// self.x.domain([self.yearRange[0], 2010]);
 	// self.y.domain([0, d3.max(self.data, function(d) { return d.count+5; })]);
 	self.y.domain([0, d3.max(self.data, function(d) { return d.count; })]);
 
