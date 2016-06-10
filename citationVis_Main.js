@@ -36,6 +36,7 @@ if (window.location.pathname === "/healthra") {
 if (typeof citationvis_data === "undefined") {
 	var citationvis_data = json_fname;
 }
+console.log(citationvis_data);
 
 //delete this
 // json_fname = 'static/healthra/org_8.json'
