@@ -32,7 +32,7 @@ function egoGraphVis(data) {
 								 "spiral2"];
 	self.nodePlacement = self.nodePlacementOptions[1];
 	
-	self.zoomable = false;
+	self.zoomable = true;
 
 	self.svg;
     self.group;
@@ -227,7 +227,8 @@ egoGraphVis.prototype.init = function() {
 				for (var i=0; i<self.domainsThisGraph.length; i++) {
 					var thisDomain = self.domainsThisGraph[i].key
 					if (thisDomain==d.DomainID) {
-						var thisColor = self.colorScheme[i];
+						// var thisColor = self.colorScheme[i];
+						var thisColor = self.domainsThisGraph[i].color;
 						d.color = thisColor;
 						return thisColor;
 					}
@@ -388,7 +389,7 @@ egoGraphVis.prototype.init = function() {
 						var newi = Math.pow(i+1, .3);
 						var newi = (i)+100;
 						var thisPos = powScale(newi);
-						console.log(thisPos)
+						// console.log(thisPos)
 						var b = 7;
 						var thisPos = angles[i];
 						d.x = cx + (initialRad + b * thisPos) * Math.cos(thisPos);
@@ -499,6 +500,8 @@ egoGraphVis.prototype.getDomainsThisGraph = function() {
 	var self = this;
 
 	var domains = self.data.graph.Domains;
+
+	var maxDomains = self.colorScheme.length;
 	
 	// self.domainsThisGraph will be an array of {key: "DomainID", values: count}
 	self.domainsThisGraph = d3.nest()
@@ -510,9 +513,15 @@ egoGraphVis.prototype.getDomainsThisGraph = function() {
 	for (var i=0; i<self.domainsThisGraph.length; i++) {
 		var key = +self.domainsThisGraph[i].key;
 		self.domainsThisGraph[i].DomainID = key;
-		self.domainsThisGraph[i].DomainName = domains[key];
-		self.domainsThisGraph[i].color = self.colorScheme[i];
+		if (i<maxDomains-1) {
+			self.domainsThisGraph[i].DomainName = domains[key];
+			self.domainsThisGraph[i].color = self.colorScheme[i];
+		} else {
+			self.domainsThisGraph[i].DomainName = "Other";
+			self.domainsThisGraph[i].color = self.colorScheme[maxDomains-1];
+		}
 	}
+	console.log(self.domainsThisGraph);
 };
 
 egoGraphVis.prototype.legendInit = function() {
@@ -526,6 +535,7 @@ egoGraphVis.prototype.legendInit = function() {
         .attr('class', 'legend')
         .attr('transform', 'translate('+padding+','+padding+')');
         // .style('opacity', 1e-9);
+	console.log(self.domainsThisGraph);
 
     var legendItem = self.legend.selectAll('g')
         .data(self.domainsThisGraph)
@@ -535,7 +545,15 @@ egoGraphVis.prototype.legendInit = function() {
         .attr('id', function(d) {
             // return 'legendCluster' + d.cluster; })
             // Use Domain instead of cluster
-            return 'legendDomain' + d.DomainID; });
+            return 'legendDomain' + d.DomainID; })
+		.attr("display", function(d, i) {
+				// hide all "other" domain objects except the first one
+				if (i<self.colorScheme.length) {
+					return "";
+				} else {
+					return "none";
+				}
+			});
         // // start off hidden if not the same domain as the ego node
         // .style('opacity', function(d) {
         //     // var thisTopCluster = d.cluster.split(':')[0];
@@ -560,7 +578,12 @@ egoGraphVis.prototype.legendInit = function() {
         })
         .attr('dy', '1em')
         .text(function(d) {
-                return 'Papers in category "' + d.DomainName + '" (domain ' + d.DomainID + ')';
+                // return 'Papers in category "' + d.DomainName + '" (domain ' + d.DomainID + ')';
+				if (d.DomainName.toLowerCase()=="other") {
+					return "Papers in other categories";
+				} else {
+					return 'Papers in category "' + d.DomainName + '"';
+				}
         })
 		.style('font-size', '.9em');
 
@@ -569,6 +592,9 @@ egoGraphVis.prototype.legendInit = function() {
 
 egoGraphVis.prototype.addAuthorImage = function() {
 	var self = this;
+	if (self.egoNode.hasOwnProperty('name')) {
+		self.egoNode.AuthorName = self.egoNode.name;
+	}
 	if (self.egoNode.hasOwnProperty('AuthorName')) {
 		
 		self.authorImageDiv = self.svg.append('foreignObject').attr('class', 'externalObject')
@@ -628,8 +654,8 @@ egoGraphVis.prototype.addAuthorImage = function() {
 	}
 
 	// If an image URL is included in the data:
-	var AuthorImgUrl = self.data.nodes[0].AuthorImgUrl;
-	console.log(AuthorImgUrl)
+	var AuthorImgUrl = self.data.nodes[0].AuthorImgUrl || self.data.nodes[0].ImgURL;
+	console.log(AuthorImgUrl);
 	if (typeof AuthorImgUrl != 'undefined') {
 		addImage(AuthorImgUrl);
 		return;

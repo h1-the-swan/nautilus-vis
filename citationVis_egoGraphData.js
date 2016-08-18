@@ -60,7 +60,7 @@ citationVis.egoGraphData = (function(maxNodes) {
 			console.log(arr);
 			var newArr = hasDomainID.concat(noDomainID);
 			console.log(newArr);
-			return hasDomainID.concat(noDomainID);
+			return newArr;
 		}
 		notEgoNodes = DomainIDToFront(notEgoNodes);
 		// for (var i = notEgoNodes.length-1; i>=0; i--) {
@@ -70,7 +70,7 @@ citationVis.egoGraphData = (function(maxNodes) {
 		// }
 		// console.log(c);
 		// Take the first n items, where n = maxNodes
-		console.log(maxNodes);
+		// console.log(maxNodes);
 		if (typeof maxNodes == 'undefined') {
 			var maxNodes = 274;  // TODO: implement this better (so it's not hard coded here)
 		}
