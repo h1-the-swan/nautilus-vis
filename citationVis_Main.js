@@ -36,7 +36,7 @@ if (window.location.pathname === "/healthra") {
 if (typeof citationvis_data === "undefined") {
 	var citationvis_data = json_fname;
 }
-console.log(citationvis_data);
+// console.log(citationvis_data);
 
 //delete this
 // json_fname = 'static/healthra/org_8.json'
@@ -90,10 +90,14 @@ citationVis.yearTickClickEventListener = function() {
 
 d3.select('#infoDiv').append('p').text('Loading...');
 
-d3.json(citationvis_data, function(error, graph) {
-	if (error) throw error;
+// d3.json(citationvis_data, function(error, graph) {
+// citationvis_data = JSON.parse(citationvis_data);
+// (function(graph){
+d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
+	// if (error) throw error;
 
 	// Get the most common Domain IDs for the ego author's papers
+	console.log(graph);
 	var domainsNest = d3.nest()
 		.key(function(d) { return d.DomainID; }).sortValues(d3.descending)
 		.rollup(function(leaves) { return leaves.length; })
@@ -216,3 +220,4 @@ d3.json(citationvis_data, function(error, graph) {
 	citationVis.yearTickClickEventListener();
 	
 });
+// })(citationvis_data);

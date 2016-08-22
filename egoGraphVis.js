@@ -500,6 +500,7 @@ egoGraphVis.prototype.getDomainsThisGraph = function() {
 	var self = this;
 
 	var domains = self.data.graph.Domains;
+	console.log(domains);
 
 	var maxDomains = self.colorScheme.length;
 	
@@ -579,7 +580,7 @@ egoGraphVis.prototype.legendInit = function() {
         .attr('dy', '1em')
         .text(function(d) {
                 // return 'Papers in category "' + d.DomainName + '" (domain ' + d.DomainID + ')';
-				if (d.DomainName.toLowerCase()=="other") {
+				if (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") {
 					return "Papers in other categories";
 				} else {
 					return 'Papers in category "' + d.DomainName + '"';
