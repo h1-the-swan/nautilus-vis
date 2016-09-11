@@ -723,6 +723,8 @@ egoGraphVis.prototype.addEventListeners = function() {
 					.style('border-style', 'solid')
 					.style('border-color', d.color);
 			});
+			// going to try to use the method of getting the citation text. but not working yet
+			// getCitation(d.PaperID, this);
         })
         .on('mousemove', function() {
             self.tooltip = self.tooltip
@@ -732,6 +734,20 @@ egoGraphVis.prototype.addEventListeners = function() {
         })
         .on('mouseout', function() {
             self.tooltip = self.tooltip.style('visibility', 'hidden'); });
+
+	function getCitation(paperid, nodeObj) {
+		//
+		var thisNode = d3.select(nodeObj);
+		$.ajax({
+			dataType: 'json',
+			url: $SCRIPT_ROOT + '/_vis_get_citation',
+			data: {paperid: paperid},
+			success: function(result) {
+				console.log(result['citation']);
+				thisNode.attr('title', result['citation']);
+			}
+		});
+	}
 
 };
 
