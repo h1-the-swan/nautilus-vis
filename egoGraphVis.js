@@ -776,7 +776,8 @@ egoGraphVis.prototype.makeTooltip = function(d, callback) {
 		});
 	}
 	function makeHtml() {
-		var tooltipHtml = '<p class="paperID">pID: ' + d.id + '</p>';
+		// var tooltipHtml = '<p class="paperID">pID: ' + d.id + '</p>';
+		var tooltipHtml = '';
 		tooltipHtml = tooltipHtml + '<p class="paperTitle">';
 		tooltipHtml = tooltipHtml + d.Title;
 		tooltipHtml = tooltipHtml + '</p>';
