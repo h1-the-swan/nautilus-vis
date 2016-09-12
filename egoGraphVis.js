@@ -733,8 +733,29 @@ egoGraphVis.prototype.addEventListeners = function() {
                 .style('left', (d3.event.pageX+10)+'px');
         })
         .on('mouseout', function() {
-            self.tooltip = self.tooltip.style('visibility', 'hidden'); });
+            self.tooltip = self.tooltip.style('visibility', 'hidden'); })
+		.on('click', function(d) {
+			var doi = getDOI(d.PaperID, this);
+		})
 
+	function getDOI(paperid, nodeObj) {
+		var thisNode = d3.select(nodeObj);
+		$.ajax({
+			dataType: 'json',
+			url: $SCRIPT_ROOT + '/_vis_get_doi',
+			data: {paperid: paperid},
+			success: function(result) {
+				console.log(result['doi']);
+				var doi = result['doi'];
+				if (doi) {
+					var url = 'https://doi.org/' + doi;
+					window.open(url, '_blank');
+				}
+
+			}
+		});
+		
+	}
 	function getCitation(paperid, nodeObj) {
 		//
 		var thisNode = d3.select(nodeObj);
