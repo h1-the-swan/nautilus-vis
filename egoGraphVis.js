@@ -74,25 +74,12 @@ function egoGraphVis(data) {
 		linkPrevYear: .04
 	};
 
-    // Put everything into a graphParams object:
-    self.graphParams = {
-		opacityVals: {value: self.opacityVals},
-		colorScheme: {value: self.colorScheme},
-		// transitionTimePerYear: {value: 2000},  //in milliseconds
-		maxNodes: {value: 100},
-		nodePlacement: {value: self.nodePlacement},
-		doAnnotations: {value: false}
-    };
-    // Set all the params to 'updated' = false:
-    for (var p in self.graphParams) {
-		if (self.graphParams.hasOwnProperty(p)) {
-			self.graphParams[p]['updated'] = false;
-		}
-    }
+	self.doAnnotations = false;
 
     self.animationState;  // "forward", "rewind", "stopped"
-	self.transitionTimePerYear;
-	self.transitionTimePerNode = 100;  // TEST
+	self.transitionTimePerYear; // imported in importDefaultOptions below
+	// self.transitionTimePerNode = 100;  // TEST
+	self.transitionTimePerNode; // calculated in calculateTransitionTime()
     // self.nodeAppearDuration = self.transitionTimePerNode * 4;
 	// I haven't actually gotten it to work having different transitionTimePerNode and nodeAppearDuration
 	self.linkAppearDuration = 500;
@@ -132,16 +119,6 @@ egoGraphVis.prototype.init = function() {
 		.attr('id', 'graphSvg')
 		.attr('width', self.graphDimensions.width)
 		.attr('height', self.graphDimensions.height);
-    // Let the user know that it is loading:
-	// self.loadingText = self.svg.append('text')
-	// 	.attr('id', 'loadingText')
-	// 	.attr('text-anchor', 'middle')
-	// 	.attr('x', self.graphDimensions.width/2)
-	// 	.attr('y', self.graphDimensions.height/2)
-	// 	.attr('pointer-events', 'none')
-	// 	.attr('font-size', '3em')
-	// 	.style('opacity', .5)
-	// 	.text('Loading...');
 
     self.group = self.svg.append('g')
 		            .attr('class', 'graphContainer')
@@ -201,25 +178,6 @@ egoGraphVis.prototype.init = function() {
         .attr('r',1e-9)
         // Color by different categories of how similar the node's cluster is to the ego node
         .attr('fill', function(d) {
-            // The commented out code below uses the (infomap) clusters to color the nodes.
-            // For now, I will use the MAS Domains (loaded in domains.tsv above) instead.
-            //
-            // var clusterSplit = d.cluster.split(':');
-            // if (clusterSplit.slice(0,-1).join('') === self.egoNode.cluster.split(':').slice(0,-1).join('')) {
-            //     var thisColor = self.clusters[0].color;
-            // } else {
-            // // otherwise, color based on top level cluster
-            //         var clusterTopLevel = clusterSplit[0];
-            //         for (var i=1; i<self.clusters.length; i++) {
-            //                 if (self.clusters[i].cluster.split(':')[0] === clusterSplit[0])
-            //                     { var thisColor = self.clusters[i].color; }
-            //         }
-            // }
-            //
-            // d.color = thisColor;
-            // return thisColor;
-            //
-
             // color the nodes based on DomainID
 			if (d.color) {
 				return d.color;
@@ -235,7 +193,7 @@ egoGraphVis.prototype.init = function() {
 				}
 			}
         })
-        .style('opacity', self.graphParams.opacityVals.value.node);
+        .style('opacity', self.opacityVals.node);
 
     newNode.call(self.force.drag);
 
@@ -259,7 +217,7 @@ egoGraphVis.prototype.init = function() {
 		.attr('T', 0)
 		// Links to the ego node are darker than links between the others
 		.style('opacity', function(d) {
-			var opVals = self.graphParams.opacityVals.value;
+			var opVals = self.opacityVals;
 			if (d.linkToEgo) {
 				return opVals.linkToEgo;
 			} else {
@@ -273,7 +231,7 @@ egoGraphVis.prototype.init = function() {
 	function placeNodes() {
 		// This function will determine the final spatial placement of all of the nodes.
 
-		switch (self.graphParams.nodePlacement.value) {
+		switch (self.nodePlacement) {
 			case self.nodePlacementOptions[0]:
 				// Place the nodes using the force layout.
 				// Uses the force layout parameters in self.makeForce
@@ -1116,7 +1074,7 @@ egoGraphVis.prototype.drawNode = function() {
             var thisDomain = self.domainsThisGraph.filter(function(domain) {return domain.DomainID==d.DomainID;});
             // The above returned an array. Take the first element to get the object representing the Domain.
             thisDomain = thisDomain[0]
-            if ( (self.graphParams.doAnnotations.value) && (!thisDomain.alreadyAnnotated) && (thisDomain.DomainID != self.egoNode.DomainID) ) {
+            if ( (self.doAnnotations) && (!thisDomain.alreadyAnnotated) && (thisDomain.DomainID != self.egoNode.DomainID) ) {
                 self.annotationNewCluster(d);
                 d3.select('#legendDomain' + d.DomainID)
                     .transition().delay(1000).duration(2000)
