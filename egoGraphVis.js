@@ -52,6 +52,7 @@ function egoGraphVis(data) {
     self.authorImageDiv;
 
     self.tooltip;
+	self.tip;
 
 	self.tick;
 	self.force;
@@ -119,6 +120,12 @@ egoGraphVis.prototype.init = function() {
 		.attr('id', 'graphSvg')
 		.attr('width', self.graphDimensions.width)
 		.attr('height', self.graphDimensions.height);
+
+	self.tip = d3.tip()
+		.attr('class', 'd3-tip')
+		.style('cursor', 'default')
+		.style('pointer-events', 'none');
+	self.svg.call(self.tip);
 
     self.group = self.svg.append('g')
 		            .attr('class', 'graphContainer')
@@ -673,27 +680,72 @@ egoGraphVis.prototype.addEventListeners = function() {
 
     // Add event listener to nodes for tooltip:
     d3.selectAll('.node')
+		.each(function(d) { 
+			d.updatedProps = false;
+	        d.tooltipHtml = '<p>Loading...</p>'	});
+	self.tip.html(function(d) { return d.tooltipHtml; });
+	d3.selectAll('.node')
         .on('mouseover', function(d) {
-			self.makeTooltip(d, function(tooltipHtml) {
-				self.tooltip = self.tooltip
-					.html(tooltipHtml)
-					.style('visibility', 'visible')
-					.style('border-style', 'solid')
-					.style('border-color', d.color);
-			});
+			d.hovered = true;
+			var hoveredItem = d3.select(this);
+			// self.tooltip = self.tooltip
+			// 	.html(d.tooltipHtml)
+			// 	.style('visibility', 'visible')
+			// 	.style('border-style', 'solid')
+			// 	.style('border-color', d.color);
+			// the first time a node is moused over, retrieve additional properties if it is a paper node
+			if ( (d.nodeType === 'paper') && (!d.updatedProps) ) {
+				$.ajax({
+					dataType: 'json',
+					url: $SCRIPT_ROOT + '/_vis_get_more_paperinfo',
+					data: {paperid: d.id},
+					success: function(result) {
+						d.Title = result['title'];
+						d.doi = result['doi'];
+						d.citation = result['citation'];
+						d.updatedProps = true;
+						d.tooltipHtml = '<p>' + d.citation + '</p>';
+						if (d.hovered) {
+							self.tip.show(d, hoveredItem.node());
+						}
+
+					}
+				});
+			}
+			self.tip.show(d, hoveredItem.node());
+			// self.makeTooltip(d, function(tooltipHtml) {
+			// 	self.tooltip = self.tooltip
+			// 		.html(tooltipHtml)
+			// 		.style('visibility', 'visible')
+			// 		.style('border-style', 'solid')
+			// 		.style('border-color', d.color);
+			// });
 			// going to try to use the method of getting the citation text. but not working yet
 			// getCitation(d.PaperID, this);
         })
-        .on('mousemove', function() {
-            self.tooltip = self.tooltip
-                .style('visibility', 'visible')
-                .style('top', (d3.event.pageY-10)+'px')
-                .style('left', (d3.event.pageX+10)+'px');
+        .on('mousemove', function(d) {
+			self.tip.show(d);
+            // self.tooltip = self.tooltip
+			// 	.html(d.tooltipHtml)
+            //     .style('visibility', 'visible')
+            //     .style('top', (d3.event.pageY-10)+'px')
+            //     .style('left', (d3.event.pageX+10)+'px');
         })
-        .on('mouseout', function() {
+        .on('mouseout', function(d) {
+			d.hovered = false;
+			self.tip.hide(d);
             self.tooltip = self.tooltip.style('visibility', 'hidden'); })
 		.on('click', function(d) {
-			var doi = getDOI(d.PaperID, this);
+			// var doi = getDOI(d.PaperID, this);
+			if ( (d.nodeType === 'paper') ) {
+				if ( (d.hasOwnProperty('doi')) && (d.doi !== '') ) {
+					var url = 'https://doi.org/' + d.doi;
+				} else {
+					var url = 'https://academic.microsoft.com/#/detail/' + d.id;
+				}
+				window.open(url, '_blank');
+				
+			}
 		})
 
 	function getDOI(paperid, nodeObj) {
