@@ -10,36 +10,8 @@ function getQueryVariable(variable)
     return(false);
 }
 
-// var json_fname = 'static/data.json';
-var json_fname = 'static/cached_data/data.json';
-// http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
-json_fname = json_fname + '?' + Math.floor(Math.random() * 1000);
-var selectedID = getQueryVariable('id');
-console.log(selectedID);
-if (window.location.pathname === "/pewscholars") {
-	if (!selectedID) {
-		selectedID = "11";
-	}
-	json_fname = 'static/pewdata/data_' + selectedID + '.json';
-	if (getQueryVariable('extendedData')) {
-		// json_fname = 'static/pewdata/alldata/' + json_fname;
-		json_fname = 'static/pewdata/alldata/data_' + selectedID + '.json';
-	}
-}
-if (window.location.pathname === "/healthra") {
-	if (!selectedID) {
-		selectedID = "0";
-	}
-	json_fname = 'static/healthra/data/data_' + selectedID + '.json';
-}
 
-if (typeof citationvis_data === "undefined") {
-	var citationvis_data = json_fname;
-}
-// console.log(citationvis_data);
-
-//delete this
-// json_fname = 'static/healthra/org_8.json'
+// citationvis_data is a variable defined in the flask template that includes this js file (e.g. vismain.html)
 
 var citationVis = citationVis || {};
 
@@ -90,14 +62,10 @@ citationVis.yearTickClickEventListener = function() {
 
 d3.select('#infoDiv').append('p').text('Loading...');
 
-// d3.json(citationvis_data, function(error, graph) {
-// citationvis_data = JSON.parse(citationvis_data);
-// (function(graph){
 d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 	// if (error) throw error;
 
 	// Get the most common Domain IDs for the ego author's papers
-	console.log(graph);
 	var domainsNest = d3.nest()
 		.key(function(d) { return d.DomainID; }).sortValues(d3.descending)
 		.rollup(function(leaves) { return leaves.length; })
@@ -107,8 +75,6 @@ d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 	graph.nodes[0].DomainCounts = domainsNest;
 	console.log(graph);
 	// d3.select('#infoDiv').append('p').text(graph.nodes[0].AuthorName);
-	d3.select('#infoDiv').select('p').text(graph.nodes[0].AuthorName);
-
 
 	var default_options = citationVis.default_options, 
 		summaryStatistics = citationVis.summaryStatistics,
@@ -124,20 +90,6 @@ d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 	citationVis.publications_data = lineChartData.prepareData_egoAuthorPublications(graph);
 	citationVis.all_citations_data = lineChartData.prepareData_allCitations(graph);
 	citationVis.eigenfactor_sum_data = lineChartData.prepareData_authorEigenfactorSum(graph);
-	console.log(citationVis);
-	// var alldata = {
-	// 	'graph_data': citationVis.graph_data,
-	// 	'publications_data': citationVis.publications_data,
-	// 	'all_citations_data': citationVis.all_citations_data,
-	// 	'eigenfactor_sum_data': citationVis.eigenfactor_sum_data
-	// }
-	// var _json = JSON.stringify(alldata);
-	// console.log(_json);
-	// var blob = new Blob([_json], {type: "application/json"});
-	// var _url = window.URL.createObjectURL(blob);
-	// console.log(_url);
-	// window.location=_url;
-
 
 	// Visualization objects go here
 	citationVis.egoGraphVis = new egoGraphVis(citationVis.graph_data);
@@ -152,17 +104,11 @@ d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 	options.transitionTimePerYear = citationVis.getTransitionTimePerYear(graph);
 
 	citationVis.egoGraphVis.importDefaultOptions(options);
-	// citationVis.publicationsLineChart.importDefaultOptions(options);
-	// citationVis.citationsLineChart.importDefaultOptions(options);
-	// citationVis.eigenfactorSumLineChart.importDefaultOptions(options);
 	for (var i=0; i<citationVis.lineCharts.length; i++) {
 		citationVis.lineCharts[i].importDefaultOptions(options);
 	}
 
 	citationVis.egoGraphVis.init();
-	// citationVis.publicationsLineChart.init();
-	// citationVis.citationsLineChart.init();
-	// citationVis.eigenfactorSumLineChart.init();
 	for (var i=0; i<citationVis.lineCharts.length; i++) {
 		citationVis.lineCharts[i].init();
 	}
@@ -175,19 +121,6 @@ d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 	citationVis.lineCharts[2].addTitle("Sum of eigenfactor for this author's publications by year");
 
 
-	// var animationState = 'init';
-	// var test = citationVis.egoGraphVis.animationState;
-	// console.log(test);
-	// var checkAnimationInterval = setInterval(function() {
-	// 	                             var currAnimationState = citationVis.egoGraphVis.animationState;
-	// 								 if (currAnimationState != animationState) {
-	// 									 animationState = currAnimationState;
-	// 									 for (var i=0; i<citationVis.lineCharts.length; i++) {
-	// 										 citationVis.lineCharts[i].changeAnimationState(animationState);
-	// 									 }
-    //
-	// 								 }
-	// }, 100);
 	$( document ).on( "yearChange", function() {
 		var currYear = citationVis.egoGraphVis.currYear;
 		for (var i=0; i<citationVis.lineCharts.length; i++) {
@@ -198,10 +131,6 @@ d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 	// Hack to label the publications line chart. TODO: Fix this later
 	// var pubs = d3.select(citationVis.publicationsLineChart.chartDiv[0][0]);
 	var pubs = d3.select(citationVis.lineCharts[0].chartDiv[0][0]);
-	// console.log(pubs);
-	// console.log(d3.select('#chartsDiv'));
-	// console.log(citationVis.publicationsLineChart.chartDiv[0]);
-	// console.log(pubs.select('.y.axis').select('.axisLabel'));
 	var pubsAxisLabel = pubs.select('.y.axis').select('.axisLabel');
 	pubsAxisLabel.text('Num publications');
 	// Hack to alter eigenfactor line chart. TODO: Fix this later
