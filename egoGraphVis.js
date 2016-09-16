@@ -124,6 +124,8 @@ egoGraphVis.prototype.init = function() {
 	self.tip = d3.tip()
 		.attr('class', 'd3-tip')
 		.style('cursor', 'default')
+		.style('border-style', 'solid')
+		// .style('border-color', function(d) { return d.color; })
 		.style('pointer-events', 'none');
 	self.svg.call(self.tip);
 
@@ -707,12 +709,25 @@ egoGraphVis.prototype.addEventListeners = function() {
 						d.tooltipHtml = '<p>' + d.citation + '</p>';
 						if (d.hovered) {
 							self.tip.show(d, hoveredItem.node());
+							// self.tip.show(d);
 						}
 
 					}
 				});
+			} else if ( d.idx == 0 ) {
+				d.tooltipHtml = '<p>';
+				if (d.nodeType) {
+					d.tooltipHtml = d.tooltipHtml + d.nodeType.capitalize() + ': ';
+				}
+				d.tooltipHtml = d.tooltipHtml + d.name;
+				d.tooltipHtml = d.tooltipHtml + '</p>';
+				var numberOfPubs = d.papers.length;
+				d.tooltipHtml = d.tooltipHtml + '<p>Number of Publications: ' + numberOfPubs + '</p>';
+				
 			}
-			self.tip.show(d, hoveredItem.node());
+			self.tip.style('border-color', d.color)
+				.show(d, hoveredItem.node());
+				// .show(d);
 			// self.makeTooltip(d, function(tooltipHtml) {
 			// 	self.tooltip = self.tooltip
 			// 		.html(tooltipHtml)
