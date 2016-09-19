@@ -42,7 +42,7 @@ function egoGraphVis(data) {
 
 	self.eigenFactorScale;
 
-	self.loadingText;
+	// self.loadingText;
 
 	self.domainsThisGraph;
     self.legend;

@@ -60,7 +60,9 @@ citationVis.yearTickClickEventListener = function() {
         });
 };
 
-d3.select('#infoDiv').append('p').text('Loading...');
+d3.select('#mainDiv').append('p')
+	.attr("class", "loadingText")
+	.text('Loading...');
 
 d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 	// if (error) throw error;
@@ -148,5 +150,6 @@ d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 	// Event listeners that act across different visualization objects go here
 	citationVis.yearTickClickEventListener();
 	
+	d3.select(".loadingText").remove();
 });
 // })(citationvis_data);
