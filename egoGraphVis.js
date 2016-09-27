@@ -32,7 +32,7 @@ function egoGraphVis(data) {
 								 "spiral2"];
 	self.nodePlacement = self.nodePlacementOptions[1];
 	
-	self.zoomable = true;
+	self.zoomable = false;
 
 	self.svg;
     self.group;
@@ -972,6 +972,14 @@ egoGraphVis.prototype.continue = function() {
     // } else if (self.currNodeIndex > self.destinationNodeIndex) {
     //     self.removeNode();
     // }
+
+	// if the year of the first nonEgo node is the same as the year of the center
+	// node's first publication, transitionTimePerNode will be undefined and there
+	// will be errors.
+	// So let's calculate it:
+	if (typeof self.transitionTimePerNode === 'undefined') {
+		self.calculateTransitionTime();
+	}
 	if (self.animationState === 'forward') {
 		self.drawNode();
 	} else if (self.animationState === 'rewind') {
