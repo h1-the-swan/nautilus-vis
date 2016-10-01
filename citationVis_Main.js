@@ -60,6 +60,12 @@ citationVis.yearTickClickEventListener = function() {
         });
 };
 
+function main() {
+
+if (citationvis_data === 'ABORT') {
+	return;
+}
+
 d3.select('#mainDiv').append('p')
 	.attr("class", "loadingText")
 	.text('Loading...');
@@ -153,3 +159,6 @@ d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 	d3.select(".loadingText").remove();
 });
 // })(citationvis_data);
+}
+
+main();
