@@ -185,22 +185,20 @@ egoGraphVis.prototype.init = function() {
         .attr('T', 0)
         // Start with the node invisible
         .attr('r',1e-9)
+		.each(function(d) {
+			for (var i=0; i<self.domainsThisGraph.length; i++) {
+				var thisDomain = self.domainsThisGraph[i].key
+				if (thisDomain==d.DomainID) {
+					// var thisColor = self.colorScheme[i];
+					var thisColor = self.domainsThisGraph[i].color;
+					d.color = thisColor;
+				}
+			}
+		})
         // Color by different categories of how similar the node's cluster is to the ego node
         .attr('fill', function(d) {
             // color the nodes based on DomainID
-			if (d.color) {
-				return d.color;
-			} else {
-				for (var i=0; i<self.domainsThisGraph.length; i++) {
-					var thisDomain = self.domainsThisGraph[i].key
-					if (thisDomain==d.DomainID) {
-						// var thisColor = self.colorScheme[i];
-						var thisColor = self.domainsThisGraph[i].color;
-						d.color = thisColor;
-						return thisColor;
-					}
-				}
-			}
+			return d.color
         })
         .style('opacity', self.opacityVals.node);
 
