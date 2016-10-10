@@ -186,6 +186,7 @@ egoGraphVis.prototype.init = function() {
         // Start with the node invisible
         .attr('r',1e-9)
 		.each(function(d) {
+			d.DomainName = self.data.graph.Domains[d.DomainID];
 			for (var i=0; i<self.domainsThisGraph.length; i++) {
 				var thisDomain = self.domainsThisGraph[i].key
 				if (thisDomain==d.DomainID) {
@@ -705,6 +706,8 @@ egoGraphVis.prototype.addEventListeners = function() {
 						d.citation = result['citation'];
 						d.updatedProps = true;
 						d.tooltipHtml = '<p>' + d.citation + '</p>';
+						d.tooltipHtml = d.tooltipHtml + '<br>';
+						d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
 						if (d.hovered) {
 							self.tip.show(d, hoveredItem.node());
 							// self.tip.show(d);
