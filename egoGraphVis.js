@@ -478,7 +478,8 @@ egoGraphVis.prototype.getDomainsThisGraph = function() {
 	self.domainsThisGraph.sort(function(a,b) { return d3.descending(a.values, b.values); });
 	// Add a few more variables to the domainsThisGraph data:
 	for (var i=0; i<self.domainsThisGraph.length; i++) {
-		var key = +self.domainsThisGraph[i].key;
+		// var key = +self.domainsThisGraph[i].key;
+		var key = self.domainsThisGraph[i].key;
 		self.domainsThisGraph[i].DomainID = key;
 		if (i<maxDomains-1) {
 			self.domainsThisGraph[i].DomainName = domains[key];

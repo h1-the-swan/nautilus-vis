@@ -71,7 +71,14 @@ d3.select('#mainDiv').append('p')
 	.text('Loading...');
 
 d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
-	// if (error) throw error;
+	console.log(error);
+	if (error) {
+		var contactEmail = 'jporteno@uw.edu';
+		var errHtml = 'There was an error generating the visualization. Try reloading the page, or generating the visualization again. If the problem persists, <a href="mailto:' + contactEmail + '">contact the administrator</a>.'
+		$( '.loadingText' ).html( errHtml )
+			.css( {'color': 'red'} );
+		throw error;
+	}
 
 	// Get the most common Domain IDs for the ego author's papers
 	var domainsNest = d3.nest()
