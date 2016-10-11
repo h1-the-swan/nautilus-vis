@@ -55,8 +55,10 @@ function lineChartByYear(data) {
 	self.currYear;
 	self.transitionTimePerYear;
 	self.yearRange = d3.extent(self.data, function(d) { return d.year; });
+	// cut off at 2015
+	self.yearRange[1] = Math.min(self.yearRange[1], 2015);
 	
-	self.fundingTime
+	self.fundingTime;
 	if (typeof self.pew_Class != 'undefined') {
 		self.fundingTime = 4;  // funding period for Pew
 	}

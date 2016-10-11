@@ -35,6 +35,10 @@ citationVis.lineChartData = (function() {
 		// Get current year (using today's date):
 		var todayYear = new Date().getFullYear();
 		var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<=todayYear ? d.sourceYear : null; });
+
+		// cutoff at 2015
+		maxYear = Math.min(maxYear, 2015);
+
 		return [minYear, maxYear];
 	}
 
@@ -55,6 +59,9 @@ citationVis.lineChartData = (function() {
 
 		var cleanedLinks = cleanLinks(graph.links);
 		var yearRange = getYearRange(cleanedLinks);
+		cleanedLinks = cleanedLinks.filter(function(d) {
+			return d.sourceYear <= yearRange[1] && d.targetYear <= yearRange[1];
+		});
 
 		// for (var i=yearRange[0]; i<=yearRange[1]; i++) {
 		// 	// data[i] = 0;
