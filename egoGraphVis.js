@@ -995,6 +995,9 @@ egoGraphVis.prototype.checkYear = function() {
 	// if we are on the last node, just max out the year.
 	if (self.currNodeIndex == self.data.nodes.length-1) {
 		self.currYear = self.data.graph.yearRange[1];
+		// cutoff at 2015
+		self.currYear = Math.min(self.currYear, 2015);
+
 		self.yearTextDisplay.text(self.currYear);
 
 		// jQuery custom event, so that Main.js can listen for it and advance the year on the line charts
