@@ -514,6 +514,17 @@ egoGraphVis.prototype.legendInit = function() {
             // return 'legendCluster' + d.cluster; })
             // Use Domain instead of cluster
             return 'legendDomain' + d.DomainID; })
+		.on("mouseover", function(d) {
+			d3.selectAll(".node")
+				.filter(function(dd) {
+					return d.color==dd.color;
+				})
+				.classed("legendHover", true);
+
+		})
+		.on("mouseout", function(d) {
+			d3.selectAll(".node").classed("legendHover", false);
+		})
 		.attr("display", function(d, i) {
 				// hide all "other" domain objects except the first one
 				if (i<self.colorScheme.length) {
