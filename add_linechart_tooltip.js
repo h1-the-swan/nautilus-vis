@@ -105,6 +105,9 @@ $( document ).on( "initComplete", function() {
 // tooltipster method
 $( document ).on( 'initComplete', function() {
 	var windowWidth = $(window).width();
+
+	// nodeTooltips();
+
 	$('.yearArea, .yearTick').css('pointer-events', 'all')
 		.tooltipster({
 			theme: 'tooltipster-shadow',
@@ -136,3 +139,36 @@ $( document ).on( 'initComplete', function() {
 			}
 	});
 } );
+
+function nodeTooltips() {
+	// $('.d3-tip').remove();
+	$('.node').addClass('tooltipster');
+	$('.tooltipster').tooltipster({
+		theme: 'tooltipster-shadow',
+		animation: null,
+		animationduration: 0,
+		delay: 0,
+		updateAnimation: null,
+		functionBefore: function(instance, helper) {
+			console.log(helper.origin);
+			console.log(instance);
+			instance.content('adfs');
+
+			/*
+			var $origin = $(helper.origin);
+			var year = $origin.data('year');
+			var egoPapers = citationVis.egoGraphVis.egoNode.papers;
+			var thisYearPapers = egoPapers.filter(function(dd) {
+				return dd.Year==year;}
+				)
+				.sort(function(a, b) { return d3.descending(a.EF, b.EF); });
+			if (thisYearPapers.length === 0) {
+				return false;
+			}
+			var tooltipHtml = makeHtml(year, thisYearPapers, 3, function(html) {
+				console.log(html);
+				instance.content(html); 
+			*/
+		}
+	});
+}
