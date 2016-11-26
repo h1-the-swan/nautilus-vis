@@ -1,5 +1,72 @@
 var citationVis = citationVis || {};
 
+function makeHtml(year, papers, numDisplay, callback) {
+	if (papers[0].hasOwnProperty('citation')) {
+		var tooltipHtml = '<h3 style="font-size: 100%">Top papers in this cluster in ' + year +':</h3>';
+		tooltipHtml = tooltipHtml + '<ol>';
+		papers.forEach(function(paper) {
+			if (paper.hasOwnProperty('citation')) {
+				tooltipHtml = tooltipHtml + '<li>' + paper['citation'] + '</li>';
+			}
+		});
+		tooltipHtml = tooltipHtml + '</ol>';
+
+		citationVis.egoGraphVis.tooltip = citationVis.egoGraphVis.tooltip.html(tooltipHtml);
+		if (callback != null) {
+			callback(tooltipHtml);
+		}
+		return tooltipHtml;
+
+	} else {
+		var pids = [];
+		for (var i = 0, len = numDisplay; i < len; i++) {
+			if (i < papers.length) {
+				pids.push(papers[i].PaperID);
+			}
+		}
+		$.ajax({
+			dataType: 'json',
+			url: $SCRIPT_ROOT + '/_vis_get_more_paperinfo',
+			data: {paperid: JSON.stringify(pids)},
+			success: function(result) {
+				console.log(result);
+				var db_papers = result['papers'];
+				var tooltipHtml = '<h3 style="font-size: 100%">Top papers in this cluster in ' + year +':</h3>';
+				tooltipHtml = tooltipHtml + '<ol>';
+				for (var i = 0, len = db_papers.length; i < len; i++) {
+					papers[i]['citation'] = db_papers[i]['citation'];
+					tooltipHtml = tooltipHtml + '<li>' + papers[i]['citation'] + '</li>';
+				}
+				tooltipHtml = tooltipHtml + '</ol>';
+
+				citationVis.egoGraphVis.tooltip = citationVis.egoGraphVis.tooltip.html(tooltipHtml);
+				if (callback != null) {
+					callback(tooltipHtml);
+				}
+				return tooltipHtml;
+
+				/*
+				d.Title = result['title'];
+				d.doi = result['doi'];
+				d.citation = result['citation'];
+				d.updatedProps = true;
+				d.tooltipHtml = '<p>' + d.citation + '</p>';
+				d.tooltipHtml = d.tooltipHtml + '<br>';
+				d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
+				if (d.hovered) {
+					self.tip.show(d, hoveredItem.node());
+					// self.tip.show(d);
+				}
+				*/
+
+			}
+		});
+	}  // end else
+
+
+}
+
+/*
 $( document ).on( "initComplete", function() {
 	var lineCharts = citationVis.lineCharts;
 	var egoGraphVis = citationVis.egoGraphVis;
@@ -31,63 +98,41 @@ $( document ).on( "initComplete", function() {
 			});
 	}
 
-	function makeHtml(year, papers, numDisplay) {
-		if (papers[0].hasOwnProperty('citation')) {
-			var tooltipHtml = '<h3 style="font-size: 100%">Top papers in this cluster in ' + year +':</h3>';
-			tooltipHtml = tooltipHtml + '<ol>';
-			papers.forEach(function(paper) {
-				if (paper.hasOwnProperty('citation')) {
-					tooltipHtml = tooltipHtml + '<li>' + paper['citation'] + '</li>';
-				}
-			});
-			tooltipHtml = tooltipHtml + '</ol>';
-
-			citationVis.egoGraphVis.tooltip = citationVis.egoGraphVis.tooltip.html(tooltipHtml);
-			return tooltipHtml;
-
-		} else {
-			var pids = [];
-			for (var i = 0, len = numDisplay; i < len; i++) {
-				if (i < papers.length) {
-					pids.push(papers[i].PaperID);
-				}
-			}
-			$.ajax({
-				dataType: 'json',
-				url: $SCRIPT_ROOT + '/_vis_get_more_paperinfo',
-				data: {paperid: JSON.stringify(pids)},
-				success: function(result) {
-					console.log(result);
-					var db_papers = result['papers'];
-					var tooltipHtml = '<h3 style="font-size: 100%">Top papers in this cluster in ' + year +':</h3>';
-					tooltipHtml = tooltipHtml + '<ol>';
-					for (var i = 0, len = db_papers.length; i < len; i++) {
-						papers[i]['citation'] = db_papers[i]['citation'];
-						tooltipHtml = tooltipHtml + '<li>' + papers[i]['citation'] + '</li>';
-					}
-					tooltipHtml = tooltipHtml + '</ol>';
-
-					citationVis.egoGraphVis.tooltip = citationVis.egoGraphVis.tooltip.html(tooltipHtml);
-					return tooltipHtml;
-
-					/*
-					d.Title = result['title'];
-					d.doi = result['doi'];
-					d.citation = result['citation'];
-					d.updatedProps = true;
-					d.tooltipHtml = '<p>' + d.citation + '</p>';
-					d.tooltipHtml = d.tooltipHtml + '<br>';
-					d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
-					if (d.hovered) {
-						self.tip.show(d, hoveredItem.node());
-						// self.tip.show(d);
-					}
-					*/
-
-				}
-			});
-		}  // end else
-
-	
-	}
 });
+*/
+
+
+// tooltipster method
+$( document ).on( 'initComplete', function() {
+	var windowWidth = $(window).width();
+	$('.yearArea, .yearTick').css('pointer-events', 'all')
+		.tooltipster({
+			theme: 'tooltipster-shadow',
+			maxWidth: windowWidth * .5,
+			animation: null,
+			animationduration: 0,
+			delay: 0,
+			updateAnimation: null,
+			content: '<p>Loading...</p>',
+			contentAsHTML: true,
+			functionInit: function() {console.log('tooltipster init');},
+			functionBefore: function(instance, helper) {
+				console.log('tooltipster');
+				var $origin = $(helper.origin);
+				var year = $origin.data('year');
+				var egoPapers = citationVis.egoGraphVis.egoNode.papers;
+				var thisYearPapers = egoPapers.filter(function(dd) {
+					return dd.Year==year;}
+					)
+					.sort(function(a, b) { return d3.descending(a.EF, b.EF); });
+				if (thisYearPapers.length === 0) {
+					return false;
+				}
+				var tooltipHtml = makeHtml(year, thisYearPapers, 3, function(html) {
+					console.log(html);
+					instance.content(html); 
+				});
+				// instance.content(tooltipHtml);
+			}
+	});
+} );
