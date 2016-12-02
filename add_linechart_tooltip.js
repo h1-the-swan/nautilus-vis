@@ -1,3 +1,11 @@
+// http://codereview.stackexchange.com/questions/77614/capitalize-the-first-character-of-all-words-even-when-following-a
+String.prototype.capitalize = function() {
+    return this.toLowerCase().replace( /\b\w/g, function(m) {
+        return m.toUpperCase();
+    });
+};
+
+
 var citationVis = citationVis || {};
 
 function makeHtml(year, papers, numDisplay, callback) {
@@ -143,35 +151,29 @@ $( document ).on( 'initComplete', function() {
 function nodeTooltips() {
 	// $('.d3-tip').remove();
 	$('.node').addClass('tooltipster');
-	$('.node').first().addClass('center-node');
+	// $('.node').first().addClass('center-node');
+	var windowWidth = $(window).width();
 	$('.tooltipster').tooltipster({
 		theme: 'tooltipster-shadow',
+		maxWidth: windowWidth * .5,
 		animation: null,
 		animationduration: 0,
 		delay: 0,
 		updateAnimation: null,
+		content: '<p>Loading...</p>',
+		contentAsHTML: true,
 		functionBefore: function(instance, helper) {
-			console.log(helper.origin);
-			console.log(instance);
-			console.log(d3.select(this));
-			instance.content('adfs');
-
-			var $origin = $(helper.origin);
-			var egoPapers = citationVis.egoGraphVis.egoNode.papers;
-			var thisYearPapers = egoPapers.filter(function(dd) {
-				return dd.Year==year;}
-				)
-				.sort(function(a, b) { return d3.descending(a.EF, b.EF); });
-			if (thisYearPapers.length === 0) {
-				return false;
-			}
-			var tooltipHtml = makeHtml(year, thisYearPapers, 3, function(html) {
+			var tooltipHtml = ajaxPaperInfo(helper.origin, function(html) {
 				console.log(html);
 				instance.content(html); 
 			});
 		}
 	});
-}
+
+	function ajaxPaperInfo(node, callback) {
+		// node is the DOM element for a node
+		var html = '';
+		d3.select(node).each(function(d) {
 			if ( (d.nodeType === 'paper') && (!d.updatedProps) ) {
 				$.ajax({
 					dataType: 'json',
@@ -182,13 +184,18 @@ function nodeTooltips() {
 						d.doi = result['doi'];
 						d.citation = result['citation'];
 						d.updatedProps = true;
-						// d.tooltipHtml = '<p>' + d.citation + '</p>';
-						// d.tooltipHtml = d.tooltipHtml + '<br>';
-						// d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
+						d.tooltipHtml = '<p>' + d.citation + '</p>';
+						d.tooltipHtml = d.tooltipHtml + '<br>';
+						d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
 						// if (d.hovered) {
 						// 	self.tip.show(d, hoveredItem.node());
 						// 	// self.tip.show(d);
 						// }
+						html = d.tooltipHtml;
+						if (callback != null) {
+							callback(html);
+						}
+						return html;
 
 					}
 				});
@@ -201,5 +208,15 @@ function nodeTooltips() {
 				d.tooltipHtml = d.tooltipHtml + '</p>';
 				var numberOfPubs = d.papers.length;
 				d.tooltipHtml = d.tooltipHtml + '<p>Number of Publications: ' + numberOfPubs + '</p>';
+				html = d.tooltipHtml;
+				if (callback != null) {
+					callback(html);
+				}
 				
+				return html;
 			}
+
+		});
+		return html;
+	}
+}
