@@ -106,7 +106,7 @@ $( document ).on( "initComplete", function() {
 $( document ).on( 'initComplete', function() {
 	var windowWidth = $(window).width();
 
-	// nodeTooltips();
+	nodeTooltips();
 
 	$('.yearArea, .yearTick').css('pointer-events', 'all')
 		.tooltipster({
@@ -143,6 +143,7 @@ $( document ).on( 'initComplete', function() {
 function nodeTooltips() {
 	// $('.d3-tip').remove();
 	$('.node').addClass('tooltipster');
+	$('.node').first().addClass('center-node');
 	$('.tooltipster').tooltipster({
 		theme: 'tooltipster-shadow',
 		animation: null,
@@ -152,11 +153,10 @@ function nodeTooltips() {
 		functionBefore: function(instance, helper) {
 			console.log(helper.origin);
 			console.log(instance);
+			console.log(d3.select(this));
 			instance.content('adfs');
 
-			/*
 			var $origin = $(helper.origin);
-			var year = $origin.data('year');
 			var egoPapers = citationVis.egoGraphVis.egoNode.papers;
 			var thisYearPapers = egoPapers.filter(function(dd) {
 				return dd.Year==year;}
@@ -168,7 +168,38 @@ function nodeTooltips() {
 			var tooltipHtml = makeHtml(year, thisYearPapers, 3, function(html) {
 				console.log(html);
 				instance.content(html); 
-			*/
+			});
 		}
 	});
 }
+			if ( (d.nodeType === 'paper') && (!d.updatedProps) ) {
+				$.ajax({
+					dataType: 'json',
+					url: $SCRIPT_ROOT + '/_vis_get_more_paperinfo',
+					data: {paperid: d.id},
+					success: function(result) {
+						d.Title = result['title'];
+						d.doi = result['doi'];
+						d.citation = result['citation'];
+						d.updatedProps = true;
+						// d.tooltipHtml = '<p>' + d.citation + '</p>';
+						// d.tooltipHtml = d.tooltipHtml + '<br>';
+						// d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
+						// if (d.hovered) {
+						// 	self.tip.show(d, hoveredItem.node());
+						// 	// self.tip.show(d);
+						// }
+
+					}
+				});
+			} else if ( d.idx == 0 ) {
+				d.tooltipHtml = '<p>';
+				if (d.nodeType) {
+					d.tooltipHtml = d.tooltipHtml + d.nodeType.capitalize() + ': ';
+				}
+				d.tooltipHtml = d.tooltipHtml + d.name;
+				d.tooltipHtml = d.tooltipHtml + '</p>';
+				var numberOfPubs = d.papers.length;
+				d.tooltipHtml = d.tooltipHtml + '<p>Number of Publications: ' + numberOfPubs + '</p>';
+				
+			}
