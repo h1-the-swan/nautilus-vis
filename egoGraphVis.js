@@ -127,7 +127,7 @@ egoGraphVis.prototype.init = function() {
 		.style('border-style', 'solid')
 		// .style('border-color', function(d) { return d.color; })
 		.style('pointer-events', 'none');
-	self.svg.call(self.tip);
+	// self.svg.call(self.tip);
 
     self.group = self.svg.append('g')
 		            .attr('class', 'graphContainer')
@@ -696,7 +696,7 @@ egoGraphVis.prototype.addEventListeners = function() {
 		.each(function(d) { 
 			d.updatedProps = false;
 	        d.tooltipHtml = '<p>Loading...</p>'	});
-	self.tip.html(function(d) { return d.tooltipHtml; });
+	// self.tip.html(function(d) { return d.tooltipHtml; });
 	d3.selectAll('.node')
         .on('mouseover', function(d) {
 			d.hovered = true;
@@ -707,39 +707,39 @@ egoGraphVis.prototype.addEventListeners = function() {
 			// 	.style('border-style', 'solid')
 			// 	.style('border-color', d.color);
 			// the first time a node is moused over, retrieve additional properties if it is a paper node
-			if ( (d.nodeType === 'paper') && (!d.updatedProps) ) {
-				$.ajax({
-					dataType: 'json',
-					url: $SCRIPT_ROOT + '/_vis_get_more_paperinfo',
-					data: {paperid: d.id},
-					success: function(result) {
-						d.Title = result['title'];
-						d.doi = result['doi'];
-						d.citation = result['citation'];
-						d.updatedProps = true;
-						d.tooltipHtml = '<p>' + d.citation + '</p>';
-						d.tooltipHtml = d.tooltipHtml + '<br>';
-						d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
-						if (d.hovered) {
-							self.tip.show(d, hoveredItem.node());
-							// self.tip.show(d);
-						}
-
-					}
-				});
-			} else if ( d.idx == 0 ) {
-				d.tooltipHtml = '<p>';
-				if (d.nodeType) {
-					d.tooltipHtml = d.tooltipHtml + d.nodeType.capitalize() + ': ';
-				}
-				d.tooltipHtml = d.tooltipHtml + d.name;
-				d.tooltipHtml = d.tooltipHtml + '</p>';
-				var numberOfPubs = d.papers.length;
-				d.tooltipHtml = d.tooltipHtml + '<p>Number of Publications: ' + numberOfPubs + '</p>';
-				
-			}
-			self.tip.style('border-color', d.color)
-				.show(d, hoveredItem.node());
+			// if ( (d.nodeType === 'paper') && (!d.updatedProps) ) {
+			// 	$.ajax({
+			// 		dataType: 'json',
+			// 		url: $SCRIPT_ROOT + '/_vis_get_more_paperinfo',
+			// 		data: {paperid: d.id},
+			// 		success: function(result) {
+			// 			d.Title = result['title'];
+			// 			d.doi = result['doi'];
+			// 			d.citation = result['citation'];
+			// 			d.updatedProps = true;
+			// 			// d.tooltipHtml = '<p>' + d.citation + '</p>';
+			// 			// d.tooltipHtml = d.tooltipHtml + '<br>';
+			// 			// d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
+			// 			// if (d.hovered) {
+			// 			// 	self.tip.show(d, hoveredItem.node());
+			// 			// 	// self.tip.show(d);
+			// 			// }
+            //
+			// 		}
+			// 	});
+			// } else if ( d.idx == 0 ) {
+			// 	d.tooltipHtml = '<p>';
+			// 	if (d.nodeType) {
+			// 		d.tooltipHtml = d.tooltipHtml + d.nodeType.capitalize() + ': ';
+			// 	}
+			// 	d.tooltipHtml = d.tooltipHtml + d.name;
+			// 	d.tooltipHtml = d.tooltipHtml + '</p>';
+			// 	var numberOfPubs = d.papers.length;
+			// 	d.tooltipHtml = d.tooltipHtml + '<p>Number of Publications: ' + numberOfPubs + '</p>';
+			// 	
+			// }
+			// self.tip.style('border-color', d.color)
+			// 	.show(d, hoveredItem.node());
 				// .show(d);
 			// self.makeTooltip(d, function(tooltipHtml) {
 			// 	self.tooltip = self.tooltip
@@ -752,7 +752,7 @@ egoGraphVis.prototype.addEventListeners = function() {
 			// getCitation(d.PaperID, this);
         })
         .on('mousemove', function(d) {
-			self.tip.show(d);
+			// self.tip.show(d);
             // self.tooltip = self.tooltip
 			// 	.html(d.tooltipHtml)
             //     .style('visibility', 'visible')
@@ -761,7 +761,7 @@ egoGraphVis.prototype.addEventListeners = function() {
         })
         .on('mouseout', function(d) {
 			d.hovered = false;
-			self.tip.hide(d);
+			// self.tip.hide(d);
             self.tooltip = self.tooltip.style('visibility', 'hidden'); })
 		.on('click', function(d) {
 			// var doi = getDOI(d.PaperID, this);
