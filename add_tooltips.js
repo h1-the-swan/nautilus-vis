@@ -10,7 +10,7 @@ var citationVis = citationVis || {};
 
 function makeHtml(year, papers, numDisplay, callback) {
 	if (papers[0].hasOwnProperty('citation')) {
-		var tooltipHtml = '<h3 style="font-size: 100%">Top papers in this cluster in ' + year +':</h3>';
+		var tooltipHtml = '<h3 style="font-size: 100%">Top papers in this collection in ' + year +':</h3>';
 		tooltipHtml = tooltipHtml + '<ol>';
 		papers.forEach(function(paper) {
 			if (paper.hasOwnProperty('citation')) {
@@ -164,7 +164,6 @@ function nodeTooltips() {
 		contentAsHTML: true,
 		functionBefore: function(instance, helper) {
 			var tooltipHtml = ajaxPaperInfo(helper.origin, function(html) {
-				console.log(html);
 				instance.content(html); 
 			});
 		}
