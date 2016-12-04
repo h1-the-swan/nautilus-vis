@@ -510,6 +510,10 @@ egoGraphVis.prototype.legendInit = function() {
         .enter()
         .append('g')
         .attr('class', 'legendItem')
+		// add "other" class to last legend item
+		.classed('other', function(d) { 
+			return (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") ? true : false;
+		})
         .attr('id', function(d) {
             // return 'legendCluster' + d.cluster; })
             // Use Domain instead of cluster

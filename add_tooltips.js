@@ -115,6 +115,7 @@ $( document ).on( 'initComplete', function() {
 	var windowWidth = $(window).width();
 
 	nodeTooltips();
+	legendTooltips();
 
 	$('.yearArea, .yearTick').css('pointer-events', 'all')
 		.tooltipster({
@@ -179,6 +180,7 @@ function nodeTooltips() {
 					url: $SCRIPT_ROOT + '/_vis_get_more_paperinfo',
 					data: {paperid: d.id},
 					success: function(result) {
+						console.log(result);
 						d.Title = result['title'];
 						d.doi = result['doi'];
 						d.citation = result['citation'];
@@ -218,4 +220,20 @@ function nodeTooltips() {
 		});
 		return html;
 	}
+}
+
+function legendTooltips() {
+	var windowWidth = $(window).width();
+	var otherHtml = '<p>These are papers in categories other than the ones above. Point your mouse at a specific paper to see the name of the category.</p>';
+	$('.legendItem.other').tooltipster({
+		theme: 'tooltipster-shadow',
+		maxWidth: windowWidth * .5,
+		animation: null,
+		animationduration: 0,
+		delay: 0,
+		updateAnimation: null,
+		content: otherHtml,
+		contentAsHTML: true
+	});
+	
 }
