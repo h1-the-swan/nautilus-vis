@@ -517,7 +517,7 @@ egoGraphVis.prototype.legendInit = function() {
         .attr('id', function(d) {
             // return 'legendCluster' + d.cluster; })
             // Use Domain instead of cluster
-            return 'legendDomain' + d.DomainID; })
+            return 'legendDomain' + d.DomainID.replace(" ", ""); })
 		.on("mouseover", function(d) {
 			d3.selectAll(".node")
 				.filter(function(dd) {

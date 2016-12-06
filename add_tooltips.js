@@ -184,14 +184,23 @@ function nodeTooltips() {
 						d.Title = result['title'];
 						d.doi = result['doi'];
 						d.citation = result['citation'];
+						d.author_str = result['author_str'];
+						d.venue = result['venue'];
 						d.updatedProps = true;
-						d.tooltipHtml = '<p>' + d.citation + '</p>';
-						d.tooltipHtml = d.tooltipHtml + '<br>';
-						d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
+						// d.tooltipHtml = '<p>' + d.citation + '</p>';
+						// d.tooltipHtml = d.tooltipHtml + '<br>';
+						// d.tooltipHtml = d.tooltipHtml + '<p>Category: ' + d.DomainName + '</p>';
 						// if (d.hovered) {
 						// 	self.tip.show(d, hoveredItem.node());
 						// 	// self.tip.show(d);
 						// }
+
+						var span = $( '<span>' );
+						span.append( $( '<p class="tooltip title">' ).text(d.Title) );
+						span.append( $( '<p class="tooltip authors">' ).text(d.author_str) );
+						span.append( $( '<p class="tooltip venue">' ).text(d.venue) );
+						span.append( $( '<p class="tooltip year">' ).text(d.Year) );
+						d.tooltipHtml = span.html();
 						html = d.tooltipHtml;
 						if (callback != null) {
 							callback(html);
