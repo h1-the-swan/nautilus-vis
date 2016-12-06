@@ -119,7 +119,7 @@ $( document ).on( 'initComplete', function() {
 
 	$('.yearArea, .yearTick').css('pointer-events', 'all')
 		.tooltipster({
-			theme: 'tooltipster-shadow',
+			theme: 'tooltipster-noir',
 			maxWidth: windowWidth * .5,
 			animation: null,
 			animationduration: 0,
@@ -155,7 +155,7 @@ function nodeTooltips() {
 	// $('.node').first().addClass('center-node');
 	var windowWidth = $(window).width();
 	$('.tooltipster').tooltipster({
-		theme: 'tooltipster-shadow',
+		theme: 'tooltipster-noir',
 		maxWidth: windowWidth * .5,
 		animation: null,
 		animationduration: 0,
@@ -226,7 +226,7 @@ function legendTooltips() {
 	var windowWidth = $(window).width();
 	var otherHtml = '<p>These are papers in categories other than the ones above. Point your mouse at a specific paper to see the name of the category.</p>';
 	$('.legendItem.other').tooltipster({
-		theme: 'tooltipster-shadow',
+		theme: 'tooltipster-noir',
 		maxWidth: windowWidth * .5,
 		animation: null,
 		animationduration: 0,
