@@ -133,7 +133,13 @@ d3.json('/_get_vis_json/'+ citationvis_data, function(error, graph) {
 
 	citationVis.lineCharts[0].addTitle("Number of publications");
 	citationVis.lineCharts[1].addTitle("Number of citations received");
-	citationVis.lineCharts[2].addTitle("Sum of eigenfactor for this author's publications by year");
+	var ctrtype = getQueryVariable("ctrtype");
+	if (!ctrtype) {
+		ctrtype = "author";
+	}
+	console.log(ctrtype);
+	// citationVis.lineCharts[2].addTitle("Sum of eigenfactor for this author's publications by year");
+	citationVis.lineCharts[2].addTitle("Sum of eigenfactor for this " + ctrtype + "'s publications by year");
 
 
 	$( document ).on( "yearChange", function() {
