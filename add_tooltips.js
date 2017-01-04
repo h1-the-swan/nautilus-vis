@@ -200,6 +200,7 @@ function nodeTooltips() {
 						span.append( $( '<p class="tooltip authors">' ).text(d.author_str) );
 						span.append( $( '<p class="tooltip venue">' ).text(d.venue) );
 						span.append( $( '<p class="tooltip year">' ).text(d.Year) );
+						span.append( $( '<p class="tooltip domain">' ).text("Category: " + d.DomainName) );
 						d.tooltipHtml = span.html();
 						html = d.tooltipHtml;
 						if (callback != null) {
