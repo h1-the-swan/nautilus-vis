@@ -129,7 +129,6 @@ $( document ).on( 'initComplete', function() {
 			contentAsHTML: true,
 			functionInit: function() {console.log('tooltipster init');},
 			functionBefore: function(instance, helper) {
-				console.log('tooltipster');
 				var $origin = $(helper.origin);
 				var year = $origin.data('year');
 				var egoPapers = citationVis.egoGraphVis.egoNode.papers;
@@ -141,7 +140,6 @@ $( document ).on( 'initComplete', function() {
 					return false;
 				}
 				var tooltipHtml = makeHtml(year, thisYearPapers, 3, function(html) {
-					console.log(html);
 					instance.content(html); 
 				});
 				// instance.content(tooltipHtml);
