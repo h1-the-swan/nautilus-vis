@@ -179,6 +179,8 @@ egoGraphVis.prototype.init = function() {
     newNode = newNode.append('svg:circle')
 		//test
 		.attr('class', 'node')
+		// add class for the center node
+		.classed('centerNode', function(d) { return d.id === self.egoNode.id; })
 		.attr('r', function(d) { return d.radius; })
         // .attr('class', 'node hidden')
         // "T" attribute will keep track of the transition time elapsed

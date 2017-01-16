@@ -12,9 +12,18 @@ $( document ).on( "initComplete", function() {
 		if (!results[2]) return '';
 		return decodeURIComponent(results[2].replace(/\+/g, " "));
 	}
-	if (getParameterByName('rcvmsg') === null) return;
+	// if (getParameterByName('rcvmsg') === null) return; // add "rcvmsg=1" to the URL query parameters to enable this, otherwise do nothing
 
 	var egoGraphVis = citationVis.egoGraphVis;
+
+	// open the timelineVis when center node is clicked
+	var focus_id = getParameterByName('focusid');
+	if (focus_id) {
+		$( '.centerNode' ).click( function() {
+			var url = Flask.url_for('generate_colldata_from_collection', {'focus_id': focus_id});
+			window.open(url, '_blank');
+		});
+	}
 
 	$(window).on('storage', message_receive);
 
@@ -44,7 +53,8 @@ $( document ).on( "initComplete", function() {
 		})
 		.classed("linkedToTimeline", true);
 
-		d3.selectAll(".link.toEgo").filter(function(d) {
+		// d3.selectAll(".link.toEgo").filter(function(d) {
+		d3.selectAll(".link").filter(function(d) {
 			return highlightedNodes.indexOf(d.source) != -1;
 		})
 		.classed("linkedToTimeline", true);
