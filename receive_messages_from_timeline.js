@@ -1,7 +1,9 @@
-
 var citationVis = citationVis || {};
 
-$( document ).on( "initComplete", function() {
+$( document ).on( "initComplete", {focus_id: focus_id}, function(event) {
+	// pass focus_id through the event data
+	var focus_id = event.data.focus_id;
+	focus_id = parseInt(focus_id)
 	// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 	function getParameterByName(name, url) {
 		if (!url) url = window.location.href;
@@ -17,7 +19,9 @@ $( document ).on( "initComplete", function() {
 	var egoGraphVis = citationVis.egoGraphVis;
 
 	// open the timelineVis when center node is clicked
-	var focus_id = getParameterByName('focusid');
+	if (typeof focus_id == 'undefined' || !focus_id) {
+		var focus_id = getParameterByName('focusid');
+	}
 	if (focus_id) {
 		$( '.centerNode' ).click( function() {
 			var url = Flask.url_for('generate_colldata_from_collection', {'focus_id': focus_id});
