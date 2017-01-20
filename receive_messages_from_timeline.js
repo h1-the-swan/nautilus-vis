@@ -25,7 +25,7 @@ $( document ).on( "initComplete", {focus_id: focus_id}, function(event) {
 	if (focus_id) {
 		$( '.centerNode' ).click( function() {
 			var url = Flask.url_for('generate_colldata_from_collection', {'focus_id': focus_id});
-			window.open(url, '_blank');
+			window.open(url, '_blank', 'location=0');
 		});
 	}
 
