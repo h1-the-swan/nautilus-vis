@@ -79,6 +79,7 @@ function lineChartByYear(data) {
 lineChartByYear.prototype.init = function() {
 	var self = this;
 
+
 	self.animationState = 'init';
 	self.currYear = self.yearRange[0];  // Initialize year
 
@@ -204,7 +205,7 @@ lineChartByYear.prototype.init = function() {
 	// 	// self.linearGradient = self.makeColorGradient(1989);
 	// 	self.linearGradient = self.makeColorGradient(self.pew_Class);
 	// }
-	self.linearGradient = self.makeColorGradient(self.pew_Class);
+	// self.linearGradient = self.makeColorGradient(self.pew_Class);
 
 	self.chartArea = self.svg.append('g')
 		// .attr('clip-path', 'url(#clip)')

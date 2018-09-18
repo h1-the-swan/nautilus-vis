@@ -12,11 +12,17 @@ function makeHtml(year, papers, numDisplay, callback) {
 	if (papers[0].hasOwnProperty('citation')) {
 		var tooltipHtml = '<h3 style="font-size: 100%">Top papers in this collection in ' + year +':</h3>';
 		tooltipHtml = tooltipHtml + '<ol>';
-		papers.forEach(function(paper) {
+		var numPapersAdded = 0;
+		for (var i = 0, len = papers.length; i < len; i++) {
+			var paper = papers[i];
 			if (paper.hasOwnProperty('citation')) {
 				tooltipHtml = tooltipHtml + '<li>' + paper['citation'] + '</li>';
+				numPapersAdded++;
+				if (numPapersAdded === numDisplay) {
+					break;
+				}
 			}
-		});
+		}
 		tooltipHtml = tooltipHtml + '</ol>';
 
 		citationVis.egoGraphVis.tooltip = citationVis.egoGraphVis.tooltip.html(tooltipHtml);
@@ -39,7 +45,7 @@ function makeHtml(year, papers, numDisplay, callback) {
 			success: function(result) {
 				console.log(result);
 				var db_papers = result['papers'];
-				var tooltipHtml = '<h3 style="font-size: 100%">Top papers in this cluster in ' + year +':</h3>';
+				var tooltipHtml = '<h3 style="font-size: 100%">Top papers in this collection in ' + year +':</h3>';
 				tooltipHtml = tooltipHtml + '<ol>';
 				for (var i = 0, len = db_papers.length; i < len; i++) {
 					papers[i]['citation'] = db_papers[i]['citation'];
