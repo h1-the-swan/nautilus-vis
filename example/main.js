@@ -13,7 +13,10 @@ var citationVis = nautilus_vis.citationVis;
 var egoGraphVis = nautilus_vis.egoGraphVis;
 var lineChartByYear = nautilus_vis.lineChartByYear;
 
-d3.json(citationvis_data).then(function(graph) {
+d3.json(citationvis_data, function(error, graph) {
+	if (error) {
+		throw error;
+	}
 	// main(graph);
 	console.log(citationVis);
 	main(graph);

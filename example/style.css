@@ -1,0 +1,281 @@
+body {
+  font-family: Baskerville;
+	/* font-size: 1.6em; */
+  /* font-family: "Franklin Gothic Medium", "Franklin Gothic", "ITC Franklin Gothic", Arial, sans-serif; */
+  /* font-family: "Franklin Gothic Medium", "Franklin Gothic"; */
+  /* text-align: center; */
+  /* padding: 20px; */
+	background-image: url("../img/square_bg.png");
+}
+
+div#contents {
+	/* padding-top: 1rem; */
+	/* padding-bottom: 5rem; */
+	padding: 10px;
+	background: white;
+}
+
+p {
+  font-family: "Franklin Gothic";
+	font-size: 1.6rem;
+}
+
+.spinner {
+	display: none;
+}
+
+ul {
+	list-style-type: none;
+}
+
+#header {
+	margin-top: 1.5rem;
+	margin-bottom: 5rem;
+}
+
+.headerTop {
+	padding: 15px;
+	/* background: #fcfdfa; */
+}
+
+#footer {
+	margin-top: 10rem;
+	margin-bottom: 6rem;
+}
+
+#header h1,h2,h3,h4,h5,h6 {
+	margin: 0;
+}
+
+a {
+	text-decoration: none;
+}
+
+#header a,
+#footer a
+{
+	color: inherit;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+#header h3 {
+	font-size: 3rem;
+}
+
+#header h6 {
+	font-size: 1.6rem;
+}
+
+div.right-side {
+	/* margin-left: 0; */
+}
+
+div.right-side .row {
+	float: right;
+}
+
+nav {
+	/* float: right; */
+	clear: both;
+}
+
+nav ul {
+	margin-bottom: 0;
+}
+
+nav li {
+	float: left;
+	padding: 0 5px 0 5px;
+	margin-bottom: 0;
+}
+
+.subtitle {
+	text-align: center;
+}
+
+.hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+div.intro {
+	margin-bottom: 5rem;
+}
+
+.form.container {
+	text-align: center;
+}
+
+.panel-title {
+	text-align: center;
+}
+
+.node {
+  stroke: #fff;
+}
+
+.link {
+	stroke: #000;
+}
+
+.legend {
+  width: 75%;
+  text-align: left;
+  font-size: .8em;
+	cursor: default;
+  /* pointer-events: none; */
+}
+
+/* #description p,ul { */
+/*   margin: 0; */
+/*   font-size: .8rem; */
+/* } */
+
+#description ul {
+	list-style-type: none;
+}
+
+.lineChartTitle {
+	font-size: .75em;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.y.axis .tick {
+  font-size: .75em;
+}
+
+.area {
+  fill-opacity: .15;
+	/* fill: url(#line-gradient); */
+}
+
+.line {
+  stroke-width: 1.5px;
+  fill: none;
+	/* stroke: url(#line-gradient); */
+}
+
+.yearTick {
+    cursor: default;
+}
+
+.yearTick:hover {
+    text-decoration: underline overline;
+}
+
+.annotation {
+  font-size: 1.1em;
+  pointer-events: none;
+}
+
+/* #linkToAbout { */
+/* 	margin-top: 0; */
+/* 	font-size: 1.25em; */
+/*   /* cursor: default; */ */
+/* } */
+
+/* #linkToAbout:hover { */
+/*     text-decoration: underline; */
+/* } */
+
+.annotation p {
+  margin: 0;
+}
+
+/* #nodeInfo p{ */
+/*   margin: 0; */
+/*   padding: 0; */
+/*   font-size: .7em; */
+/* } */
+
+#nodeInfo .line1{
+  margin-top: 5px;
+}
+#nodeInfo .line2{
+  margin-bottom: 5px;
+}
+
+#revealControlPanel {
+	margin-top: 3em;
+}
+
+button,
+.button,
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+/* 	font-family: Baskerville; */
+/* 	font-size: 1.5rem; */
+}
+
+.checkBox {
+  /* font-size: .8em; */
+  /* display: block; */
+}
+
+.nodeTooltip {
+  padding: 0 1em;
+  /* background-color: #949372; */
+	background-color: white;
+	color: #333333;
+  text-align: left;
+	line-height: 1;
+	box-shadow: 2px 2px 2px;
+}
+
+.nodeTooltip p, .nodeTooltip li, .nodeTooltip h3 {
+  /* color: white; */
+  opacity: 1;
+  font-family: "Franklin Gothic";
+}
+
+.legendHover {
+	/* nodes that correspond to mouseover of legend item */
+	stroke: black;
+	stroke-width: 2px;
+}
+
+.node.linkedToTimeline {
+	stroke: black;
+	stroke-width: 2px;
+}
+
+.link.linkedToTimeline {
+	opacity: 1;
+	stroke-width: 5px;
+}
+
+.d3-tip {
+	line-height: 1;
+	/* padding: 0 1em; */
+	padding: 1rem;
+  background-color: #949372;
+	color: white;
+	pointer-events: none;
+	max-width: 500px;
+}
+
+.d3-tip p {
+	margin: 0;
+}
+
+.ui-tooltip {
+	line-height: 1;
+}
+
+.tooltipster-content p,
+.tooltipster-content h3,
+.tooltipster-content li
+{
+	font-size: .9em;
+	margin: 0;
+}

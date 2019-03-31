@@ -25,7 +25,7 @@
     "babel-register": "^7.0.0-beta.3",
     "chai": "^4.1.2",
     "cross-env": "^5.2.0",
-    "d3": "^5.9.1",
+    "d3": "^3.5.17",
     "eslint": "^5.0.1",
     "eslint-loader": "^2.0.0",
     "ignore-loader": "^0.1.2",
