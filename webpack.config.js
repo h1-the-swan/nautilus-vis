@@ -6,7 +6,7 @@ const env = require('yargs').argv.env; // use --env with webpack 2
 const pkg = require('./package.json');
 // const nodeExternals = require('webpack-node-externals');
 
-let libraryName = pkg.name;
+let libraryName = pkg.name.replace('-', '_');
 
 let outputFile, mode;
 

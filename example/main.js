@@ -1,4 +1,3 @@
-// https://css-tricks.com/snippets/javascript/get-url-variables/
 function getQueryVariable(variable)
 {
     var query = window.location.search.substring(1);
@@ -10,52 +9,15 @@ function getQueryVariable(variable)
     return(false);
 }
 
-var citationVis = citationVis || {};
+var citationVis = nautilus_vis.citationVis;
+var egoGraphVis = nautilus_vis.egoGraphVis;
+var lineChartByYear = nautilus_vis.lineChartByYear;
 
-citationVis.getTransitionTimePerYear= function(graph, longestYearTransitionTime) {
-	console.log(graph);
-	// This will let us vary the transition time per year
-	var transitionTimePerYear = {};
-	var emptyYearTransitionTime = 300;
-	// var longestYearTransitionTime = 4000;
-	// Set default value:
-	// http://stackoverflow.com/questions/894860/set-a-default-parameter-value-for-a-javascript-function
-	var longestYearTransitionTime = typeof longestYearTransitionTime !== 'undefined' ? longestYearTransitionTime : 4000;
-	// This scale takes the number of nodes for a given year as input
-	// and outputs the transition time, based on a threshold mapping
-	var thresholdScale = d3.scale.threshold()
-		.domain([1, 3, 10, 20, 30])
-		.range([
-				emptyYearTransitionTime,  // zero nodes
-				longestYearTransitionTime * .2,  // one or two nodes
-				longestYearTransitionTime * .5, // 3 to 9
-				longestYearTransitionTime * .7,  // 10 to 19
-				longestYearTransitionTime * .85,  // 20 to 29
-				longestYearTransitionTime  // 30+
-				]);
-	var yearRange = graph.graph.yearRange;
-	
-	// Put the transition time for each year into an object
-	for (var i=yearRange[0]; i<=yearRange[1]; i++) {
-		// transitionTimePerYear[i] = 1000;
-		transitionTimePerYear[i] = thresholdScale(graph.graph.nodeCountsPerYear[i]);
-	}
-	return transitionTimePerYear;
-};
-
-citationVis.yearTickClickEventListener = function() {
-    // Add click listeners to line chart axis tick labels (years).
-    // On click, a new destination node will be set.
-    d3.selectAll('.yearTick')
-        .on('click', function(d) {
-            // Get the year (as integer)
-            var destinationYear = this.getAttribute('data-year');
-            // Stop all transitions on nodes and links
-            d3.selectAll('.node, .link').transition().duration(0);
-
-			citationVis.egoGraphVis.newDestinationNode(destinationYear);
-        });
-};
+d3.json(citationvis_data).then(function(graph) {
+	// main(graph);
+	console.log(citationVis);
+	main(graph);
+});
 
 function main(graph) {
 if (citationvis_data === 'ABORT') {
@@ -88,7 +50,6 @@ d3.select('#mainDiv').append('p')
 
 	console.log(default_options);
 	var options = default_options.defaults;
-	console.log(options);
 
 	graph = summaryStatistics.addSummaryStatistics(graph);
 	citationVis.graph_data = egoGraphData.prepare_egoGraphData(graph);
@@ -141,18 +102,19 @@ d3.select('#mainDiv').append('p')
 
 	// Hack to label the publications line chart. TODO: Fix this later
 	// var pubs = d3.select(citationVis.publicationsLineChart.chartDiv[0][0]);
-	var pubs = d3.select(citationVis.lineCharts[0].chartDiv[0][0]);
-	var pubsAxisLabel = pubs.select('.y.axis').select('.axisLabel');
-	pubsAxisLabel.text('Num publications');
+	// var pubs = d3.select(citationVis.lineCharts[0].chartDiv[0][0]);
+	// var pubsAxisLabel = pubs.select('.y.axis').select('.axisLabel');
+	// pubsAxisLabel.text('Num publications');
+
 	// Hack to alter eigenfactor line chart. TODO: Fix this later
 	// citationVis.eigenfactorSumLineChart.yAxis.tickFormat(d3.format('e'));
 	citationVis.lineCharts[2].yAxis.tickFormat(d3.format('e'));
 	// var EFChart = d3.select(citationVis.eigenfactorSumLineChart.chartDiv[0][0]);
-	var EFChart = d3.select(citationVis.lineCharts[2].chartDiv[0][0]);
-	EFChart.select('.y.axis')
-		// .call(citationVis.eigenfactorSumLineChart.yAxis)
-		.call(citationVis.lineCharts[2].yAxis)
-		.select('.axisLabel').text('Sum of Eigenfactor');
+	// var EFChart = d3.select(citationVis.lineCharts[2].chartDiv[0][0]);
+	// EFChart.select('.y.axis')
+	// 	// .call(citationVis.eigenfactorSumLineChart.yAxis)
+	// 	.call(citationVis.lineCharts[2].yAxis)
+	// 	.select('.axisLabel').text('Sum of Eigenfactor');
 
 
 	// Event listeners
@@ -162,7 +124,3 @@ d3.select('#mainDiv').append('p')
 	d3.select(".loadingText").remove();
 // })(citationvis_data);
 }
-
-// main();
-//
-export default citationVis;

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<!-- <meta name="viewport" content="width=device&#45;width"> -->
+		<title>Nautilus</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tippy.js@4.2.1/themes/light-border.css" integrity="sha256-cpXbUNk+V/EXxqmcyU0BJe8eEFURwIYi+CTmJseXFwU=" crossorigin="anonymous">
+		<style>
+
+		.links line {
+			stroke: #999;
+			stroke-opacity: 0.6;
+		}
+
+		.nodes circle {
+			stroke: #fff;
+			stroke-width: 1.5px;
+		}
+
+		.node text {
+			pointer-events: none;
+			font: 10px sans-serif;
+		}
+
+		#nodelab-form {
+			visibility: hidden;
+		}
+
+		#tooltip-template {
+			display: none;
+		}
+
+		.paper_titles ul {
+			list-style: disc inside;
+			margin-left: 0;
+			padding-left: 0;
+		}
+
+		.paper_titles li {
+			margin: 0;
+			padding: 0;
+		}
+
+		.tippy-tooltip.label-important-theme {
+			background-color: unset;
+			color: unset;
+			border: unset;
+			padding: unset;
+			border-radius: 0;
+			pointer-events: none;
+		}
+		
+
+		</style>
+	</head>
+
+	<body>
+		<h1>Coauthorship network example</h1>
+		<div class="vis-description">
+			<p>
+				Nautilus
+			</p>
+		</div>
+
+		<div id="mainDiv">
+			<div id="graphDiv"></div>
+		</div>
+		
+		<div id="tooltip-template">
+			<div class="author_name">
+				<h3 class="template-content"></h3>
+			</div>
+			<div class="cluster_id">
+				<p>Cluster ID: <span class="template-content"></span></p>
+			</div>
+			<div class="affil_name">
+				<p>Affiliation: <span class="template-content"></span></p>
+			</div>
+			<div class="paper_titles">
+				<h5>Papers:</h5>
+				<ul class="template-content">
+				</ul>
+			</div>
+		</div>  <!-- tooltip-template -->
+
+
+
+		<script>
+			var citationvis_data = "data/data_xRMGaEEe.json";
+		</script>
+		<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/fuse/2.6.1/fuse.min.js"></script> -->
+		<!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.6.1/svg.min.js"></script> -->
+		<!-- <script type="text/javascript" src="svg.screenbbox.min.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/d3@5.9.1/dist/d3.min.js" integrity="sha256-RtVUDWfx0vF5nrvHDYcQoWSPaOuQ0R8Rq9kUG2kSvH8=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha256-ZvOgfh+ptkpoa2Y4HkRY28ir89u/+VRyDE7sB7hEEcI=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/tippy.js@4.2.1/umd/index.all.min.js" integrity="sha256-88S1J91jsNFJA0k4SqGJyfvvjjZOOCCY2Ye0UdEdxlw=" crossorigin="anonymous"></script>
+	<script src='../lib/nautilus_vis.js'></script>
+	<script src='./main.js'></script>
+	</body>
+</html>
