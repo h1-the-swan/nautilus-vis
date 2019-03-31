@@ -1,0 +1,13 @@
+.ipynb_checkpoints/
+venv
+.DS_Store
+node_modules
+package-lock.json
+public/bundle*
+public/data/
+notebooks/
+.env
+*.log
+src/data
+example/data
+test.html
