@@ -629,12 +629,12 @@ function nodeTooltips() {
 
 	function makeNodeTooltipHtml(d) {
 		var span = $( '<span>' );
-		span.append( $( '<p class="tooltip title">' ).text(d.Title) );
-		span.append( $( '<p class="tooltip authors">' ).text(d.author_str) );
-		span.append( $( '<p class="tooltip venue">' ).text(d.venue) );
-		span.append( $( '<p class="tooltip year">' ).text(d.Year) );
+		span.append( $( '<p class="title">' ).text(d.Title) );
+		span.append( $( '<p class="authors">' ).text(d.author_str) );
+		span.append( $( '<p class="venue">' ).text(d.venue) );
+		span.append( $( '<p class="year">' ).text(d.Year) );
 		// span.append( $( '<p class="tooltip domain">' ).text("Category: " + d.DomainName) );
-		span.append( $( '<p class="tooltip domain">' ).text("Categories: " + d.Field_of_study_names) );
+		span.append( $( '<p class="domain">' ).text("Categories: " + d.Field_of_study_names) );
 		// span.append( $( '<p class="tooltip js_div">' ).text("JS Divergence: " + d.js_div) );
 		// span.append( $( '<p class="tooltip avg_distance">' ).text("Average cluster distance: " + d.average_cluster_distance_to_center) );
 		// span.append( $( '<p class="tooltip fos_kmeans_category">' ).text("FOS Kmeans category: " + d.fos_kmeans_category) );
