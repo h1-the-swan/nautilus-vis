@@ -5,7 +5,32 @@
 		<!-- <meta name="viewport" content="width=device&#45;width"> -->
 		<title>Nautilus</title>
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tippy.js@4.2.1/themes/light-border.css" integrity="sha256-cpXbUNk+V/EXxqmcyU0BJe8eEFURwIYi+CTmJseXFwU=" crossorigin="anonymous">
-		<link rel="stylesheet" href="./style.css" type="text/css" media="screen" charset="utf-8">
+		<link rel="stylesheet" href="normalize.css" type="text/css" media="screen" charset="utf-8">
+<link rel="stylesheet" href="skeleton.css" type="text/css" media="screen" charset="utf-8">
+<link rel="stylesheet" href="style.css" type="text/css" media="screen" charset="utf-8">
+		<script type="text/javascript" src="svg_002.js"></script>
+	<script type="text/javascript" src="svg.js"></script>
+	<link rel="stylesheet" href="tooltipster.css" type="text/css">
+
+	<link rel="stylesheet" href="tooltipster-sideTip-noir.css" type="text/css">
+	<script type="text/javascript" src="tooltipster.js"></script>
+	<script type="text/javascript" src="tooltipster-SVG.js"></script>
+
+	<style type="text/css" media="screen">
+		p.tooltip {
+				margin: 0;
+		}
+
+		.tooltip.title {
+				text-decoration: underline;
+				margin-bottom: 5px;
+		}
+
+		.tooltip.venue {
+				font-style: italic;
+		}
+	</style>
+
 	</head>
 
 	<body>
@@ -40,16 +65,21 @@
 
 
 		<script>
-			var citationvis_data = "data/data_horvitz.json";
+			var citationvis_data = "data/nas2_mag_doi_join_network_fulldata_with_fos_names.json";
 		</script>
 		<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/fuse/2.6.1/fuse.min.js"></script> -->
 		<!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.6.1/svg.min.js"></script> -->
 		<!-- <script type="text/javascript" src="svg.screenbbox.min.js"></script> -->
 		<script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 		<script src="https://cdn.jsdelivr.net/npm/d3@3.5.17/d3.min.js" integrity="sha256-dsOXGNHAo/syFnazt+KTBsCQeRmlcW1XKL0bCK4Baec=" crossorigin="anonymous"></script>
+		<script type="text/javascript" src="d3-tip.js" charset="utf-8"></script>
 		<script src="https://cdn.jsdelivr.net/npm/tooltipster@4.2.6/dist/js/tooltipster.bundle.min.js" integrity="sha256-glChvCaC6IJq49dkfulAWd7xlkPwA0FEydjhjPBintA=" crossorigin="anonymous"></script>
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha256-ZvOgfh+ptkpoa2Y4HkRY28ir89u/+VRyDE7sB7hEEcI=" crossorigin="anonymous"></script>
 		<script src="https://cdn.jsdelivr.net/npm/tippy.js@4.2.1/umd/index.all.min.js" integrity="sha256-88S1J91jsNFJA0k4SqGJyfvvjjZOOCCY2Ye0UdEdxlw=" crossorigin="anonymous"></script>
+		<script type="text/javascript" charset="utf-8">
+			var $SCRIPT_ROOT = "";
+			var focus_id = "";
+		</script>
 	<script src='../lib/nautilus_vis.js'></script>
 	<script src='./main.js'></script>
 	</body>

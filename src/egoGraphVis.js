@@ -66,6 +66,17 @@ function egoGraphVis(data) {
     // self.colorScheme.splice(0, 0, self.colorScheme.splice(1, 1)[0])
 	self.colorScheme;  // imported in importDefaultOptions below
 
+	// continuous color scheme based on jensen-shannon divergence
+	var viridis = ["#440154","#440256","#450457","#450559","#46075a","#46085c","#460a5d","#460b5e","#470d60","#470e61","#471063","#471164","#471365","#481467","#481668","#481769","#48186a","#481a6c","#481b6d","#481c6e","#481d6f","#481f70","#482071","#482173","#482374","#482475","#482576","#482677","#482878","#482979","#472a7a","#472c7a","#472d7b","#472e7c","#472f7d","#46307e","#46327e","#46337f","#463480","#453581","#453781","#453882","#443983","#443a83","#443b84","#433d84","#433e85","#423f85","#424086","#424186","#414287","#414487","#404588","#404688","#3f4788","#3f4889","#3e4989","#3e4a89","#3e4c8a","#3d4d8a","#3d4e8a","#3c4f8a","#3c508b","#3b518b","#3b528b","#3a538b","#3a548c","#39558c","#39568c","#38588c","#38598c","#375a8c","#375b8d","#365c8d","#365d8d","#355e8d","#355f8d","#34608d","#34618d","#33628d","#33638d","#32648e","#32658e","#31668e","#31678e","#31688e","#30698e","#306a8e","#2f6b8e","#2f6c8e","#2e6d8e","#2e6e8e","#2e6f8e","#2d708e","#2d718e","#2c718e","#2c728e","#2c738e","#2b748e","#2b758e","#2a768e","#2a778e","#2a788e","#29798e","#297a8e","#297b8e","#287c8e","#287d8e","#277e8e","#277f8e","#27808e","#26818e","#26828e","#26828e","#25838e","#25848e","#25858e","#24868e","#24878e","#23888e","#23898e","#238a8d","#228b8d","#228c8d","#228d8d","#218e8d","#218f8d","#21908d","#21918c","#20928c","#20928c","#20938c","#1f948c","#1f958b","#1f968b","#1f978b","#1f988b","#1f998a","#1f9a8a","#1e9b8a","#1e9c89","#1e9d89","#1f9e89","#1f9f88","#1fa088","#1fa188","#1fa187","#1fa287","#20a386","#20a486","#21a585","#21a685","#22a785","#22a884","#23a983","#24aa83","#25ab82","#25ac82","#26ad81","#27ad81","#28ae80","#29af7f","#2ab07f","#2cb17e","#2db27d","#2eb37c","#2fb47c","#31b57b","#32b67a","#34b679","#35b779","#37b878","#38b977","#3aba76","#3bbb75","#3dbc74","#3fbc73","#40bd72","#42be71","#44bf70","#46c06f","#48c16e","#4ac16d","#4cc26c","#4ec36b","#50c46a","#52c569","#54c568","#56c667","#58c765","#5ac864","#5cc863","#5ec962","#60ca60","#63cb5f","#65cb5e","#67cc5c","#69cd5b","#6ccd5a","#6ece58","#70cf57","#73d056","#75d054","#77d153","#7ad151","#7cd250","#7fd34e","#81d34d","#84d44b","#86d549","#89d548","#8bd646","#8ed645","#90d743","#93d741","#95d840","#98d83e","#9bd93c","#9dd93b","#a0da39","#a2da37","#a5db36","#a8db34","#aadc32","#addc30","#b0dd2f","#b2dd2d","#b5de2b","#b8de29","#bade28","#bddf26","#c0df25","#c2df23","#c5e021","#c8e020","#cae11f","#cde11d","#d0e11c","#d2e21b","#d5e21a","#d8e219","#dae319","#dde318","#dfe318","#e2e418","#e5e419","#e7e419","#eae51a","#ece51b","#efe51c","#f1e51d","#f4e61e","#f6e620","#f8e621","#fbe723","#fde725"];
+	var spectral8 = ['#d53e4f', '#f46d43', '#fdae61', '#fee08b', '#e6f598', '#abdda4', '#66c2a5', '#3288bd'];
+	var rainbow = ["#2c7bb6", "#00a6ca","#00ccbc","#90eb9d","#ffff8c", "#f9d057","#f29e2e","#e76818","#d7191c"]
+	self.JSDColorScale = d3.scale.linear()
+		.domain(d3.extent(self.notEgoNodes, function(d) {return d.js_div;}))
+		.range(["red", "blue"]);
+	self.ClusterDistanceColorScale = d3.scale.linear()
+		.domain(d3.extent(self.notEgoNodes, function(d) {return d.average_cluster_distance_to_center;}))
+		.range(spectral8);
+
     // Opacity values
     self.opacityVals = {
 		node: 1, 
@@ -152,7 +163,8 @@ egoGraphVis.prototype.init = function() {
 	// position in center
 	self.data.nodes[0].x = self.graphDimensions.width/2;
 	self.data.nodes[0].y = self.graphDimensions.height/2;
-	self.data.nodes[0].color = self.colorScheme[0];
+	// self.data.nodes[0].color = self.colorScheme[0];
+	self.data.nodes[0].color = self.JSDColorScale(0);
 	self.egoNode = self.data.nodes[0];
 	
 	// Set up a scale for Eigenfactor in order to encode size of nodes by Eigenfactor (influence)
@@ -189,14 +201,19 @@ egoGraphVis.prototype.init = function() {
         .attr('r',1e-9)
 		.each(function(d) {
 			d.DomainName = self.data.graph.Domains[d.DomainID];
-			for (var i=0; i<self.domainsThisGraph.length; i++) {
-				var thisDomain = self.domainsThisGraph[i].key
-				if (thisDomain==d.DomainID) {
-					// var thisColor = self.colorScheme[i];
-					var thisColor = self.domainsThisGraph[i].color;
-					d.color = thisColor;
-				}
-			}
+			// for (var i=0; i<self.domainsThisGraph.length; i++) {
+			// 	var thisDomain = self.domainsThisGraph[i].key
+			// 	if (thisDomain==d.DomainID) {
+			// 		// var thisColor = self.colorScheme[i];
+			// 		var thisColor = self.domainsThisGraph[i].color;
+			// 		d.color = thisColor;
+			// 	}
+			// }
+			// d.color = self.JSDColorScale(d.js_div);
+			// d.color = self.ClusterDistanceColorScale(d.average_cluster_distance_to_center);
+
+			// d.color = self.colorScheme[d.fos_kmeans_category];
+			d.color = self.colorScheme[d.tfidf_kmeans_category];
 		})
         // Color by different categories of how similar the node's cluster is to the ego node
         .attr('fill', function(d) {
@@ -385,6 +402,7 @@ egoGraphVis.prototype.init = function() {
                     .attr('text-anchor', 'end')
                     .style('pointer-events', 'none')
                     .style('opacity', 1e-9)
+					.attr('id', 'egoGraphVis_yearIndicator')
 					.text(self.data.graph.yearRange[0]);
 
 	self.revealEgoNode();
@@ -464,38 +482,80 @@ egoGraphVis.prototype.importDefaultOptions = function(options) {
 
 };
 
-egoGraphVis.prototype.getDomainsThisGraph = function() {
-	var self = this;
+// This version of getDomainsThisGraph counts up the occurrences of the domains
+// to allow for an "other" category.
+// If we're using predetermined k-means-based categories, we don't need this.
+// So use the below version of getDomainsThisGraph instead.
+//
+// egoGraphVis.prototype.getDomainsThisGraph = function() {
+// 	var self = this;
+//
+// 	// var domains = self.data.graph.Domains;
+// 	// var domains = self.data.graph.fos_kmeans_categories;
+// 	var domains = self.data.graph.titles_kmeans_categories;
+// 	console.log(domains);
+//
+// 	var maxDomains = self.colorScheme.length;
+// 	
+// 	// self.domainsThisGraph will be an array of {key: "DomainID", values: count}
+// 	self.domainsThisGraph = d3.nest()
+// 		// .key(function(d) { return d.DomainID; })
+// 		// .key(function(d) { return d.fos_kmeans_category; })
+// 		.key(function(d) { return d.title_kmeans_category; })
+// 		.rollup(function(leaves) { return leaves.length; })
+// 		.entries(self.notEgoNodes);
+// 	// self.domainsThisGraph.sort(function(a,b) { return d3.descending(a.values, b.values); });
+// 	// Add a few more variables to the domainsThisGraph data:
+// 	for (var i=0; i<self.domainsThisGraph.length; i++) {
+// 		// var key = +self.domainsThisGraph[i].key;
+// 		var key = self.domainsThisGraph[i].key;
+// 		self.domainsThisGraph[i].DomainID = key;
+// 		// if (i<maxDomains-1) {
+// 		// 	self.domainsThisGraph[i].DomainName = domains[key];
+// 		// 	self.domainsThisGraph[i].color = self.colorScheme[i];
+// 		// } else {
+// 		// 	self.domainsThisGraph[i].DomainName = "Other";
+// 		// 	self.domainsThisGraph[i].color = self.colorScheme[maxDomains-1];
+// 		// }
+// 		self.domainsThisGraph[i].DomainName = domains[key];
+// 		self.domainsThisGraph[i].color = self.colorScheme[i];
+// 	}
+// 	console.log(self.domainsThisGraph);
+// };
 
-	var domains = self.data.graph.Domains;
-	console.log(domains);
+egoGraphVis.prototype.getDomainsThisGraph = function() {
+	// Use this version of getDomainsThisGraph if the categories are predetermined and don't need to be counted.
+	// (We don't need an "other" (miscellaneous) category
+	
+	var self = this;
 
 	var maxDomains = self.colorScheme.length;
 	
-	// self.domainsThisGraph will be an array of {key: "DomainID", values: count}
-	self.domainsThisGraph = d3.nest()
-		.key(function(d) { return d.DomainID; })
-		.rollup(function(leaves) { return leaves.length; })
-		.entries(self.notEgoNodes);
-	self.domainsThisGraph.sort(function(a,b) { return d3.descending(a.values, b.values); });
+	var domains = self.data.graph.tfidf_kmeans_categories;
+	self.domainsThisGraph = [];
 	// Add a few more variables to the domainsThisGraph data:
-	for (var i=0; i<self.domainsThisGraph.length; i++) {
-		// var key = +self.domainsThisGraph[i].key;
-		var key = self.domainsThisGraph[i].key;
-		self.domainsThisGraph[i].DomainID = key;
-		if (i<maxDomains-1) {
-			self.domainsThisGraph[i].DomainName = domains[key];
-			self.domainsThisGraph[i].color = self.colorScheme[i];
-		} else {
-			self.domainsThisGraph[i].DomainName = "Other";
-			self.domainsThisGraph[i].color = self.colorScheme[maxDomains-1];
-		}
+	for (var i=0; i<maxDomains; i++) {
+		self.domainsThisGraph.push({});
+		self.domainsThisGraph[i].DomainID = i;
+		self.domainsThisGraph[i].DomainName = domains[i];
+		self.domainsThisGraph[i].color = self.colorScheme[i];
 	}
 	console.log(self.domainsThisGraph);
 };
 
 egoGraphVis.prototype.legendInit = function() {
 	var self = this;
+
+	var misinfoLegendItemsText = [
+		'computer science, data mining, ...',
+		'sociology, social science, ...',
+		'medicine, health, ...',
+		'economics, business, ...',
+		'psychology, cognition, ...',
+		'political science, ...',
+		'biology, ecology, ...',
+		'climate change, ...',
+	];
 
 	var squareSize = self.graphDimensions.width / 70;
     var padding = squareSize / 3;
@@ -505,21 +565,26 @@ egoGraphVis.prototype.legendInit = function() {
         .attr('class', 'legend')
         .attr('transform', 'translate('+padding+','+padding+')');
         // .style('opacity', 1e-9);
-	console.log(self.domainsThisGraph);
+	var legendHeaderSize = squareSize;
+	self.legend.append('svg:text')
+        .attr('transform', 'translate(0, ' + legendHeaderSize + ')')
+		.attr('class', 'egoGraphVisLegendHeader')
+		.text('Categories ⓘ');
 
     var legendItem = self.legend.selectAll('g')
         .data(self.domainsThisGraph)
         .enter()
         .append('g')
         .attr('class', 'legendItem')
-		// add "other" class to last legend item
-		.classed('other', function(d) { 
-			return (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") ? true : false;
-		})
+		// // add "other" class to last legend item
+		// .classed('other', function(d) { 
+		// 	return (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") ? true : false;
+		// })
         .attr('id', function(d) {
             // return 'legendCluster' + d.cluster; })
             // Use Domain instead of cluster
-            return 'legendDomain' + d.DomainID.replace(" ", ""); })
+            // return 'legendDomain' + d.DomainID.replace(" ", ""); })
+            return 'legendDomain' + d.DomainID; })
 		.on("mouseover", function(d) {
 			d3.selectAll(".node")
 				.filter(function(dd) {
@@ -553,22 +618,30 @@ egoGraphVis.prototype.legendInit = function() {
         .attr('width', squareSize)
         .attr('height', squareSize)
         .attr('transform', function(d, i) {
-            return 'translate(0,' + (sqrPlusPadding * i) + ')';
+            // return 'translate(0,' + (sqrPlusPadding * i) + ')';
+            return 'translate(0,' + (legendHeaderSize + padding + sqrPlusPadding * i) + ')';
         })
         .attr('fill', function(d) {
             return d.color; });
-    legendItem.append('svg:text')
+    self.legendText = legendItem.append('svg:text')
         .attr('transform', function(d, i) {
-                return 'translate(' + (sqrPlusPadding) + ',' + (sqrPlusPadding * i) + ')';
+                return 'translate(' + (sqrPlusPadding) + ',' + (legendHeaderSize + padding + sqrPlusPadding * i) + ')';
         })
         .attr('dy', '1em')
-        .text(function(d) {
+        .text(function(d, i) {
                 // return 'Papers in category "' + d.DomainName + '" (domain ' + d.DomainID + ')';
-				if (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") {
-					return "Papers in other categories";
-				} else {
-					return 'Papers in category "' + d.DomainName + '"';
-				}
+                //
+				// if (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") {
+				// 	return "Papers in other categories";
+				// } else {
+				// 	return 'Papers in category "' + d.DomainName + '"';
+				// }
+                //
+				// return d.DomainName;
+                //
+				// return "Category " + d.DomainID;
+
+				return 'C' + i + ' (' + misinfoLegendItemsText[i] + ')';
         })
 		.style('font-size', '.9em');
 
@@ -707,6 +780,8 @@ egoGraphVis.prototype.addEventListeners = function() {
         .on('mouseover', function(d) {
 			d.hovered = true;
 			var hoveredItem = d3.select(this);
+			// $("#devoutput").html("<h3>" + d.js_div + "</h3>").css("color", d.color);
+
 			// self.tooltip = self.tooltip
 			// 	.html(d.tooltipHtml)
 			// 	.style('visibility', 'visible')
@@ -775,7 +850,7 @@ egoGraphVis.prototype.addEventListeners = function() {
 				if ( (d.hasOwnProperty('doi')) && (d.doi !== '') ) {
 					var url = 'https://doi.org/' + d.doi;
 				} else {
-					var url = 'https://academic.microsoft.com/#/detail/' + d.id;
+					var url = 'https://preview.academic.microsoft.com/paper/' + d.id;
 				}
 				window.open(url, '_blank');
 				
@@ -1012,8 +1087,8 @@ egoGraphVis.prototype.checkYear = function() {
 	// if we are on the last node, just max out the year.
 	if (self.currNodeIndex == self.data.nodes.length-1) {
 		self.currYear = self.data.graph.yearRange[1];
-		// cutoff at 2015
-		self.currYear = Math.min(self.currYear, 2015);
+		// // cutoff at 2015
+		// self.currYear = Math.min(self.currYear, 2015);
 
 		self.yearTextDisplay.text(self.currYear);
 
@@ -1162,44 +1237,6 @@ egoGraphVis.prototype.drawNode = function() {
 			// console.log(t1-t0 + "milliseconds");
 			self.animateToDestinationNode();
 			drawLinks(d);
-        // .each(function(d) {
-            // Put up annotation if a node comes from a new domain.
-            // Must satisfy the conditions:
-            // -graph paramater doAnnotations is true
-            // -the domain has not already been annotated
-            // -the domain is different than the ego node's domain
-            var thisDomain = self.domainsThisGraph.filter(function(domain) {return domain.DomainID==d.DomainID;});
-            // The above returned an array. Take the first element to get the object representing the Domain.
-            thisDomain = thisDomain[0]
-            if ( (self.doAnnotations) && (!thisDomain.alreadyAnnotated) && (thisDomain.DomainID != self.egoNode.DomainID) ) {
-                self.annotationNewCluster(d);
-                d3.select('#legendDomain' + d.DomainID)
-                    .transition().delay(1000).duration(2000)
-                    .style('opacity', 1);
-                thisDomain.alreadyAnnotated = true;
-            } // else {
-
-            // I can use else if statements for the other annotations.
-            // (or other if statements? what if one node trips two annotations?)
-
-            // var clusterSplit = d.cluster.split(':');
-            // // Put up annotation if a node comes from a new cluster
-            // // Also reveal this cluster in the legend
-            // var clusterIndex = self.clustersToAnnotate.indexOf(clusterSplit[0])
-            // if (clusterIndex > -1)
-            //         { if ( (self.graphParams.doAnnotations.value ) && ( !self.clusters[clusterIndex].alreadyAnnotated ))
-            //                 { self.annotationNewCluster(d);
-            //                 d3.select('#legendCluster' + clusterSplit[0])
-            //                         .transition().delay(1000).duration(2000)
-            //                         .style('opacity', 1);
-            //                 self.clusters[clusterIndex].alreadyAnnotated = true; } }
-
-            // Put up annotation when the highest Eigenfactor node appears
-            // Commented out because it happens too early for this paper and interferes with flow
-            //if (d.EF === d3.max(self.allNodes, function(dd) { return dd.EF; }))
-                    //{ console.log('highest EF'); self.annotationHighestEF(d); }
-
-            // else self.animateToDestinationNode();
 
         });
 };

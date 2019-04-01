@@ -10,6 +10,8 @@ function getQueryVariable(variable)
     return(false);
 }
 
+
+
 var citationVis = citationVis || {};
 
 citationVis.getTransitionTimePerYear= function(graph, longestYearTransitionTime) {
@@ -57,18 +59,22 @@ citationVis.yearTickClickEventListener = function() {
         });
 };
 
-function main(graph) {
-if (citationvis_data === 'ABORT') {
-	return;
-}
+function main() {
+
 
 d3.select('#mainDiv').append('p')
 	.attr("class", "loadingText")
 	.text('Loading...');
 
-
-// d3.json(citationvis_data, function(error, graph) {
-	console.log(graph);
+d3.json('nas2_mag_doi_join_network_fulldata_with_fos_names.json', function(error, graph) {
+	console.log(error);
+	if (error) {
+		var contactEmail = 'jporteno@uw.edu';
+		var errHtml = 'There was an error generating the visualization, or else data processing is still in progress. Try reloading the page later, or generating the visualization again. If the problem persists, <a href="mailto:' + contactEmail + '">contact the administrator</a>.'
+		$( '.loadingText' ).html( errHtml )
+			.css( {'color': 'red'} );
+		throw error;
+	}
 
 	// Get the most common Domain IDs for the ego author's papers
 	var domainsNest = d3.nest()
@@ -78,6 +84,7 @@ d3.select('#mainDiv').append('p')
 	domainsNest.sort(function(a,b) { return d3.descending(a.values, b.values); });
 	// store as a node property
 	graph.nodes[0].DomainCounts = domainsNest;
+	console.log(graph);
 	// d3.select('#infoDiv').append('p').text(graph.nodes[0].AuthorName);
 
 	var default_options = citationVis.default_options, 
@@ -86,7 +93,6 @@ d3.select('#mainDiv').append('p')
 	    lineChartData = citationVis.lineChartData,
 		eventListeners = citationVis.eventListeners;
 
-	console.log(default_options);
 	var options = default_options.defaults;
 	console.log(options);
 
@@ -160,9 +166,8 @@ d3.select('#mainDiv').append('p')
 	citationVis.yearTickClickEventListener();
 	
 	d3.select(".loadingText").remove();
+});
 // })(citationvis_data);
 }
 
-// main();
-//
-export default citationVis;
+main();

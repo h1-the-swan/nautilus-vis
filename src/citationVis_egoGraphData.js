@@ -26,7 +26,7 @@ citationVis.egoGraphData = (function(maxNodes) {
 		// Filter out nodes that have year of 0
 		for (var i=1; i<graph.nodes.length; i++) {
 			// if ( (graph.nodes[i].EF > 0) && (graph.nodes[i].Year>0) ) {
-			if (graph.nodes[i].Year>0) {
+			if (graph.nodes[i].Year>0 && graph.nodes[i].Title != "") {
 				notEgoNodes.push(graph.nodes[i]);
 			}
 		}
@@ -100,8 +100,13 @@ citationVis.egoGraphData = (function(maxNodes) {
 		function recalculateLinks(nodes, links) {
 			var newLinks = [];
 			for (i=0; i<links.length; i++) {
-				var thisSource = nodes.filter(function(d) { return d.oldIdx === links[i].source; });
-				var thisTarget = nodes.filter(function(d) { return d.oldIdx === links[i].target; });
+				// var thisSource = nodes.filter(function(d) { return d.oldIdx === links[i].source; });
+				// var thisTarget = nodes.filter(function(d) { return d.oldIdx === links[i].target; });
+				
+				// now (2018) the node id (i.e., Paper_ID) is working to identify links, instead of the node index
+				// maybe this is because of a new version of networkx?
+				var thisSource = nodes.filter(function(d) { return d.id === links[i].source; });
+				var thisTarget = nodes.filter(function(d) { return d.id === links[i].target; });
 				if ( thisSource.length>0 && thisTarget.length>0 ) {
 					if ( (thisTarget[0].nodeType === 'paper') && (thisSource[0].Year < thisTarget[0].Year) ) {
 						// exclude the link in this case (i.e. if the source year is less than the target year

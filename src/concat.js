@@ -1,3 +1,388 @@
+var citationVis = citationVis || {};
+
+$( document ).on( "initComplete", function() {
+	var egoGraphVis = citationVis.egoGraphVis;
+	if (egoGraphVis.zoomable == false) {
+		return;
+	}
+	var zoom = egoGraphVis.zoom;
+	egoGraphVis.zoomTranslate = zoom.translate();
+
+	egoGraphVis.checkZoom = function(d) {
+		var zoomThresholdMin = coordinates([0, 0])[1];  // minimum y value
+		var zoomThresholdMax = coordinates([egoGraphVis.graphDimensions.width, egoGraphVis.graphDimensions.height])[1];  // maximum y value
+		if (d.y < zoomThresholdMin || d.y > zoomThresholdMax) {
+			console.log(zoom.translate());
+			console.log(zoom.scale());
+			console.log(coordinates([d.x, d.y]));
+	console.log(coordinates([egoGraphVis.graphDimensions.width, egoGraphVis.graphDimensions.height]));
+	console.log(coordinates([0,0]));
+			// http://bl.ocks.org/mbostock/7ec977c95910dd026812
+			egoGraphVis.group.call(zoom.event);
+
+			// Record the coordinates (in data space) of the center (in screen space).
+			var center0 = zoom.center();
+			var translate0 = zoom.translate();
+			var coordinates0 = coordinates(center0);
+			zoom.scale(zoom.scale() * .9);
+
+			// Translate back to the center.
+			var center1 = point(coordinates0);
+			zoom.translate([translate0[0] + center0[0] - center1[0], translate0[1] + center0[1] - center1[1]]);
+
+			egoGraphVis.group.transition().duration(500).call(zoom.event);
+			// egoGraphVis.group.call(zoom.event);
+		}
+	};
+
+	function coordinates(point) {
+		var scale = zoom.scale();
+		var translate = zoom.translate();
+		return [(point[0] - translate[0]) / scale, (point[1] - translate[1]) / scale];
+	}
+
+	function point(coordinates) {
+		var scale = zoom.scale();
+		var translate = zoom.translate();
+		return [coordinates[0] * scale + translate[0], coordinates[1] * scale + translate[1]];
+	}
+
+	function testrecord() {
+		var t = [300, 501];
+		console.log('coordinates');
+		console.log(t);
+		console.log(coordinates(t));
+	console.log(coordinates([egoGraphVis.graphDimensions.width, egoGraphVis.graphDimensions.height]));
+	}
+
+	$( document ).on( "animationFinished", function() {
+		testrecord();
+		console.log(zoom.translate());
+		console.log(zoom.scale());
+	});
+	testrecord();
+			// // Record the coordinates (in data space) of the center (in screen space).
+			// var center0 = zoom.center();
+			// var translate0 = zoom.translate();
+			// var coordinates0 = coordinates(center0);
+			// zoom.scale(zoom.scale() * .5);
+            //
+			// // Translate back to the center.
+			// var center1 = point(coordinates0);
+			// zoom.translate([translate0[0] + center0[0] - center1[0], translate0[1] + center0[1] - center1[1]]);
+            //
+			// // egoGraphVis.group.transition().duration(200).call(zoom.event);
+			// egoGraphVis.group.call(zoom.event);
+			// testrecord();
+});
+
+var citationVis = citationVis || {};
+
+$( document ).on( "initComplete", {focus_id: focus_id}, function(event) {
+	// pass focus_id through the event data
+	var focus_id = event.data.focus_id;
+	focus_id = parseInt(focus_id)
+	// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+	function getParameterByName(name, url) {
+		if (!url) url = window.location.href;
+		name = name.replace(/[\[\]]/g, "\\$&");
+		var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+			results = regex.exec(url);
+		if (!results) return null;
+		if (!results[2]) return '';
+		return decodeURIComponent(results[2].replace(/\+/g, " "));
+	}
+	// if (getParameterByName('rcvmsg') === null) return; // add "rcvmsg=1" to the URL query parameters to enable this, otherwise do nothing
+
+	var egoGraphVis = citationVis.egoGraphVis;
+
+	// open the timelineVis when center node is clicked
+	if (typeof focus_id == 'undefined' || !focus_id) {
+		var focus_id = getParameterByName('focusid');
+	}
+	if (focus_id) {
+		$( '.centerNode' ).click( function() {
+			var url = Flask.url_for('generate_colldata_from_collection', {'focus_id': focus_id});
+			window.open(url, '_blank', 'location=0');
+		});
+	}
+
+	$(window).on('storage', message_receive);
+
+	// https://stackoverflow.com/questions/28230845/communication-between-tabs-or-windows
+	// receive message
+	//
+	function message_receive(ev) 
+	{
+		if (ev.originalEvent.key!='message') return; // ignore other keys
+		var message = JSON.parse(ev.originalEvent.newValue);
+		if (!message) return; // ignore empty message or message reset
+
+		// act on the message
+		if (message.command == 'timelineVis:paperItem:mouseover') highlightLinkedPapers(message.data.pid);
+		if (message.command == 'timelineVis:paperItem:mouseout') linkedPapersMouseout(message.data.pid);
+	}
+
+	function highlightLinkedPapers(paper_id) {
+		var highlightedNodes = [];
+
+		d3.selectAll(".node").filter(function(d) {
+			// return d.targetPaperIDs && d.targetPaperIDs.indexOf(paper_id) != -1;
+			if (d.targetPaperIDs && d.targetPaperIDs.indexOf(paper_id) != -1) {
+				highlightedNodes.push(d);
+				return true;
+			}
+		})
+		.classed("linkedToTimeline", true);
+
+		// d3.selectAll(".link.toEgo").filter(function(d) {
+		d3.selectAll(".link").filter(function(d) {
+			return highlightedNodes.indexOf(d.source) != -1;
+		})
+		.classed("linkedToTimeline", true);
+	}
+
+	function linkedPapersMouseout(paper_id) {
+		// d3.selectAll(".node").filter(function(d) {
+		// 	return d.targetPaperIDs && d.targetPaperIDs.indexOf(paper_id) != -1;
+		// })
+		// .classed("linkedToTimeline", false);
+		d3.selectAll(".linkedToTimeline").classed("linkedToTimeline", false);
+	}
+});
+
+
+
+var citationVis = citationVis || {};
+
+citationVis.default_options = (function() {
+	// Dimensions of the largest part of the visualization (the graph)
+	var dimensions = {
+		width: 960,
+		height: 500
+	};
+	// Dimensions of the line charts:
+	dimensions.lineChart = {
+		margin: {top: 30, right: 20, bottom: 30, left: 50}
+	};
+	dimensions.lineChart.width = dimensions.width * 3/4 - dimensions.lineChart.margin.left - dimensions.lineChart.margin.right;
+	dimensions.lineChart.height = 110 - dimensions.lineChart.margin.top - dimensions.lineChart.margin.bottom;
+
+
+	// Colors:
+	// See http://colorbrewer2.org/?type=qualitative&scheme=Set1&n=8
+	var colorScheme = ['rgb(228,26,28)','rgb(55,126,184)','rgb(77,175,74)',
+			'rgb(152,78,163)','rgb(255,127,0)','rgb(255,255,51)',
+			'rgb(166,86,40)','rgb(247,129,191)'];
+	// I liked the blue better for the main color, so the next line just moves
+	// the blue color (originally self.colorScheme[1]) to the front (self.colorScheme[0])
+	colorScheme.splice(0, 0, colorScheme.splice(1, 1)[0]);
+
+	var DEFAULT_OPTIONS = {
+		colorScheme: colorScheme,
+		dimensions: dimensions
+	};
+
+	return {
+		defaults: DEFAULT_OPTIONS
+	};
+}());
+var citationVis = citationVis || {};
+
+citationVis.lineChartData = (function() {
+	// Take in graph data and prepare it for line charts
+	
+	function getPewClassYear(graph) {
+		var egoNode = graph.nodes[0];
+		return egoNode.pew_Class;
+	}
+
+	function getFunding(graph) {
+		var egoNode = graph.nodes[0];
+		return egoNode.funding;
+	}
+
+	function cleanLinks(links) {
+		var cleanedLinks = [];
+		links.forEach(function(d) {
+			if ( (typeof d.linkToEgo != 'undefined') && (d.linkToEgo === true) ) {
+				var sourceYear = +d.sourceYear;
+				var targetYear = +d.targetYear;
+				if ( (sourceYear > 0) && (targetYear > 0) && (sourceYear >= targetYear) ) {
+					cleanedLinks.push(d);
+				}
+			}
+		});
+		return cleanedLinks;
+	}
+
+	function getYearRange(cleanedLinks) {
+		// Make sure all our data fall within the appropriate time span.
+		// The minimum year is the earliest publication by the ego author (there will likely be no citations within this year, but this chart needs to line up with the other charts).
+		// The maximum year is the last year that a paper cited one of the ego author's paper (checking to make sure it is not in the future, which would mean bad data).
+		var minYear = d3.min(cleanedLinks, function(d) { return d.targetYear>0 ? d.targetYear : null; });
+		// Get current year (using today's date):
+		var todayYear = new Date().getFullYear();
+		var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<=todayYear ? d.sourceYear : null; });
+
+		// // cutoff at 2015
+		// maxYear = Math.min(maxYear, 2015);
+		// cut off at 2017
+		maxYear = Math.min(maxYear, 2017);
+
+		return [minYear, maxYear];
+	}
+
+	function getEmptyCountData(yearRange) {
+		var emptyCountData = [];
+		for (var i=yearRange[0]; i<=yearRange[1]; i++) {
+			emptyCountData.push({year: i, count: 0});
+		}
+		return emptyCountData;
+	}
+
+	function prepareData_allCitations(graph) {
+		// var data = {};
+		var data = {};
+		data['pew_Class'] = getPewClassYear(graph);
+		data['funding'] = getFunding(graph);
+		data['values'] = [];
+
+		var cleanedLinks = cleanLinks(graph.links);
+		var yearRange = getYearRange(cleanedLinks);
+		cleanedLinks = cleanedLinks.filter(function(d) {
+			return d.sourceYear <= yearRange[1] && d.targetYear <= yearRange[1];
+		});
+
+		// for (var i=yearRange[0]; i<=yearRange[1]; i++) {
+		// 	// data[i] = 0;
+		// 	data.push({year: i, count: 0});
+		// }
+		// cleanedLinks.forEach(function(d) {
+		// 	data[d.sourceYear]++;
+		// });
+		data.values = getEmptyCountData(yearRange);
+		cleanedLinks.forEach(function(d) {
+			var thisSourceYear = d.sourceYear;
+			var dataThisYear = data.values.filter(function(dd) { return dd.year===thisSourceYear; })[0];
+			dataThisYear.count++;
+		});
+
+		return data;
+	}
+
+	function prepareData_egoAuthorPublications(graph) {
+		var data = {};
+		data['pew_Class'] = getPewClassYear(graph);
+		data['funding'] = getFunding(graph);
+		data['values'] = [];
+
+		var cleanedLinks = cleanLinks(graph.links);
+		var yearRange = getYearRange(cleanedLinks);
+		data.values = getEmptyCountData(yearRange);
+		var egoPapers = graph.nodes[0].papers;
+		egoPapers = egoPapers.filter(function(d) {
+			return ( (d.Year >= yearRange[0]) && (d.Year <= yearRange[1]) );
+		})
+		egoPapers.forEach(function(d) {
+			var dataThisYear = data.values.filter(function(dd) { return dd.year==d.Year; })[0];
+			dataThisYear.count++;
+		});
+
+		return data;
+	}
+
+	function prepareData_authorEigenfactorSum(graph) {
+		// For each year, sum the eigenfactor (EF) of the ego author's paper's
+		var data = {};
+		data['pew_Class'] = getPewClassYear(graph);
+		data['funding'] = getFunding(graph);
+		data['values'] = [];
+
+		var cleanedLinks = cleanLinks(graph.links);
+		var yearRange = getYearRange(cleanedLinks);
+		data.values = getEmptyCountData(yearRange);
+		var egoPapers = graph.nodes[0].papers;
+		egoPapers = egoPapers.filter(function(d) {
+			return ( (d.Year >= yearRange[0]) && (d.Year <= yearRange[1]) );
+		})
+		egoPapers.forEach(function(d) {
+			var dataThisYear = data.values.filter(function(dd) { return dd.year==d.Year; })[0];
+			dataThisYear.count = dataThisYear.count + d.EF;
+		});
+
+		return data;
+	}
+
+	return {
+		prepareData_allCitations: prepareData_allCitations,
+		prepareData_egoAuthorPublications: prepareData_egoAuthorPublications,
+		prepareData_authorEigenfactorSum: prepareData_authorEigenfactorSum
+	};
+}());
+
+
+var citationVis = citationVis || {};
+
+// $( document ).on( "initComplete", function() {
+// 	var egoGraphVis = citationVis.egoGraphVis;
+//
+// 	var $legendToggleButton = $('<input type="button" value="Toggle Legend" />');
+// 	$legendToggleButton.data('val', 0);
+// 	var maxVal = 3;
+//
+// 	$('#mainDiv').prepend($legendToggleButton);
+//
+// 	$legendToggleButton.on('click', function() {
+// 		var curVal = $legendToggleButton.data('val');
+// 		curVal++;
+// 		if (curVal > maxVal) {
+// 			curVal = 0;
+// 		}
+// 		$legendToggleButton.data('val', curVal);
+// 		switch (curVal) {
+// 			case 0:
+// 				egoGraphVis.legend.remove();
+// 				egoGraphVis.legendInit()
+// 				
+// 				break;
+// 			
+// 			case 1:
+// 				egoGraphVis.legendText
+// 					.text(function(d) {
+// 						var idx = +d.key;
+// 						var newText = egoGraphVis.data.graph.fos_kmeans_categories_topfosnames_tfidf[idx];
+// 						return newText;
+// 					});
+//
+// 				break;
+//
+// 			case 2:
+// 				egoGraphVis.legendText
+// 					.text(function(d) {
+// 						var idx = +d.key;
+// 						var newText = egoGraphVis.data.graph.fos_kmeans_categories_toptitlewords_tfidf[idx];
+// 						return newText;
+// 					});
+//
+// 				break;
+//
+// 			case 3:
+// 				egoGraphVis.legendText
+// 					.text(function(d) {
+// 						var idx = +d.key;
+// 						var newText = egoGraphVis.data.graph.fos_kmeans_categories_toptitlewords_tfidf_restricted[idx];
+// 						return newText;
+// 					});
+//
+// 				break;
+// 		}
+// 	});
+// 	// egoGraphVis.legendText
+// 	// 	.text('ddd');
+// });
+//
+//
 // http://codereview.stackexchange.com/questions/77614/capitalize-the-first-character-of-all-words-even-when-following-a
 String.prototype.capitalize = function() {
     return this.toLowerCase().replace( /\b\w/g, function(m) {
@@ -310,619 +695,6 @@ function legendTooltips() {
 		},
 	});
 }
-
-// $( document ).on( "initComplete", function() {
-// 	var egoGraphVis = citationVis.egoGraphVis;
-//
-// 	var $legendToggleButton = $('<input type="button" value="Toggle Legend" />');
-// 	$legendToggleButton.data('val', 0);
-// 	var maxVal = 3;
-//
-// 	$('#mainDiv').prepend($legendToggleButton);
-//
-// 	$legendToggleButton.on('click', function() {
-// 		var curVal = $legendToggleButton.data('val');
-// 		curVal++;
-// 		if (curVal > maxVal) {
-// 			curVal = 0;
-// 		}
-// 		$legendToggleButton.data('val', curVal);
-// 		switch (curVal) {
-// 			case 0:
-// 				egoGraphVis.legend.remove();
-// 				egoGraphVis.legendInit()
-// 				
-// 				break;
-// 			
-// 			case 1:
-// 				egoGraphVis.legendText
-// 					.text(function(d) {
-// 						var idx = +d.key;
-// 						var newText = egoGraphVis.data.graph.fos_kmeans_categories_topfosnames_tfidf[idx];
-// 						return newText;
-// 					});
-//
-// 				break;
-//
-// 			case 2:
-// 				egoGraphVis.legendText
-// 					.text(function(d) {
-// 						var idx = +d.key;
-// 						var newText = egoGraphVis.data.graph.fos_kmeans_categories_toptitlewords_tfidf[idx];
-// 						return newText;
-// 					});
-//
-// 				break;
-//
-// 			case 3:
-// 				egoGraphVis.legendText
-// 					.text(function(d) {
-// 						var idx = +d.key;
-// 						var newText = egoGraphVis.data.graph.fos_kmeans_categories_toptitlewords_tfidf_restricted[idx];
-// 						return newText;
-// 					});
-//
-// 				break;
-// 		}
-// 	});
-// 	// egoGraphVis.legendText
-// 	// 	.text('ddd');
-// });
-//
-//
-var citationVis = citationVis || {};
-
-citationVis.default_options = (function() {
-	// Dimensions of the largest part of the visualization (the graph)
-	var dimensions = {
-		width: 960,
-		height: 500
-	};
-	// Dimensions of the line charts:
-	dimensions.lineChart = {
-		margin: {top: 30, right: 20, bottom: 30, left: 50}
-	};
-	dimensions.lineChart.width = dimensions.width * 3/4 - dimensions.lineChart.margin.left - dimensions.lineChart.margin.right;
-	dimensions.lineChart.height = 110 - dimensions.lineChart.margin.top - dimensions.lineChart.margin.bottom;
-
-
-	// Colors:
-	// See http://colorbrewer2.org/?type=qualitative&scheme=Set1&n=8
-	var colorScheme = ['rgb(228,26,28)','rgb(55,126,184)','rgb(77,175,74)',
-			'rgb(152,78,163)','rgb(255,127,0)','rgb(255,255,51)',
-			'rgb(166,86,40)','rgb(247,129,191)'];
-	// I liked the blue better for the main color, so the next line just moves
-	// the blue color (originally self.colorScheme[1]) to the front (self.colorScheme[0])
-	colorScheme.splice(0, 0, colorScheme.splice(1, 1)[0]);
-
-	var DEFAULT_OPTIONS = {
-		colorScheme: colorScheme,
-		dimensions: dimensions
-	};
-
-	return {
-		defaults: DEFAULT_OPTIONS
-	};
-}());
-var citationVis = citationVis || {};
-
-citationVis.egoGraphData = (function(maxNodes) {
-	function prepare_egoGraphData(graph) {
-		for (i=0; i<graph.nodes.length; i++) {
-			graph.nodes[i].oldIdx = i;
-		}
-		var newGraph = {};
-		// Copy properties to newGraph that won't change:
-		var propsToCopy = ['graph', 'directed', 'multigraph'];
-		for (i=0; i<propsToCopy.length; i++) {
-			var prop = propsToCopy[i];
-			if (graph.hasOwnProperty(prop)) { newGraph[prop] = graph[prop]; }
-		}
-
-		newGraph.nodes = [];
-		newGraph.nodes.push(graph.nodes[0]);
-		newGraph.nodes[0].idx = 0;
-		// // this is a test:
-		// for (i=10; i<20; i++) {
-		// 	var newNode = graph.nodes[i];
-		// 	newNode.idx = newGraph.nodes.length;
-		// 	newGraph.nodes.push(newNode);
-		// }
-		var notEgoNodes = [];
-		// Filter out nodes that have year of 0
-		for (var i=1; i<graph.nodes.length; i++) {
-			// if ( (graph.nodes[i].EF > 0) && (graph.nodes[i].Year>0) ) {
-			if (graph.nodes[i].Year>0) {
-				notEgoNodes.push(graph.nodes[i]);
-			}
-		}
-		// Start by randomizing the order of all the nodes
-		d3.shuffle(notEgoNodes);
-		// order descending by Eigenfactor
-		// notEgoNodes.sort(function(a,b) { return b.EF - a.EF; });
-		notEgoNodes.sort(function(a,b) { return d3.descending(a.EF, b.EF); });
-		// // I don't want to remove any nodes that have a different DomainID than the ego,
-		// // so I'll move those to the front to protect them.
-		// // ACTUALLY there are too many to do this
-		// var egoDomain = graph.nodes[0].DomainCounts[0].key;  // This is the most common domain id for the ego author's papers
-		// var c = [];
-		// for (var i=0; i<notEgoNodes.length; i++) {
-		// 	if ( notEgoNodes[i].DomainID != egoDomain ) {
-		// 		c.push(notEgoNodes[i].DomainID);
-		// 		notEgoNodes.splice(0, 0, notEgoNodes.splice(i, 1)[0]);
-		// 	}
-		// }
-		// Move papers that have a DomainID to the front
-		function DomainIDToFront(arr) {
-			var hasDomainID = [];
-			var noDomainID = [];
-			for (var i = 0, len = arr.length; i < len; i++) {
-				if ( arr[i].DomainID != 0 ) {
-					hasDomainID.push(arr[i]);
-				} else {
-					noDomainID.push(arr[i]);
-				}
-			}
-			console.log(arr);
-			var newArr = hasDomainID.concat(noDomainID);
-			console.log(newArr);
-			return newArr;
-		}
-		notEgoNodes = DomainIDToFront(notEgoNodes);
-		// for (var i = notEgoNodes.length-1; i>=0; i--) {
-		// 	if ( notEgoNodes[i].DomainID != 0 ) {
-		// 		notEgoNodes.splice(0, 0, notEgoNodes.splice(i, 1)[0]);
-		// 	}
-		// }
-		// console.log(c);
-		// Take the first n items, where n = maxNodes
-		// console.log(maxNodes);
-		if (typeof maxNodes == 'undefined') {
-			var maxNodes = 274;  // TODO: implement this better (so it's not hard coded here)
-		}
-		// var maxNodes = 5000;  // TODO: implement this better (so it's not hard coded here)
-		if (notEgoNodes.length > maxNodes) {
-			// self.allNodes = self.allNodes.slice(0, self.graphParams.maxNodes.value);
-			notEgoNodes = notEgoNodes.slice(0, maxNodes);
-		}
-        // sort by Year
-        // then sort by EF (size) so that larger nodes tend to appear first.
-        // (this somewhat reduces the problem of sending out 
-        // links to nodes that haven't appeared yet.
-        // maybe try a better solution later.)
-		notEgoNodes.sort(function(a,b) {
-			return d3.ascending(a.Year, b.Year) || d3.descending(a.EF, b.EF);
-		});
-
-		// Append these to newGraph.nodes
-		for (i=0; i<notEgoNodes.length; i++) {
-			var newNode = notEgoNodes[i];
-			newNode.idx = newGraph.nodes.length;
-			newGraph.nodes.push(newNode);
-		}
-
-		newGraph.links = recalculateLinks(newGraph.nodes, graph.links);
-
-		function recalculateLinks(nodes, links) {
-			var newLinks = [];
-			for (i=0; i<links.length; i++) {
-				var thisSource = nodes.filter(function(d) { return d.oldIdx === links[i].source; });
-				var thisTarget = nodes.filter(function(d) { return d.oldIdx === links[i].target; });
-				if ( thisSource.length>0 && thisTarget.length>0 ) {
-					if ( (thisTarget[0].nodeType === 'paper') && (thisSource[0].Year < thisTarget[0].Year) ) {
-						// exclude the link in this case (i.e. if the source year is less than the target year
-					} else {
-						var newLink = links[i];
-						newLink.source = thisSource[0].idx;
-						newLink.target = thisTarget[0].idx;
-						newLinks.push(links[i]);
-					}
-				}
-			}
-			newLinks.forEach(function(d) {
-				if ( typeof d.target != 'number' ) console.log(d);
-			});
-
-			return newLinks;
-		}
-
-		var yearRange = newGraph.graph.yearRange;
-		function getNodeCountsPerYear(nodes, yearRange) {
-			var yearsNest = d3.nest()
-				.key(function(d) { return d.Year; }).sortKeys(d3.ascending)
-				.rollup(function(leaves) { return leaves.length; })
-				// .entries(nodes.slice(1));  // all except ego node (node[0])
-				.map(nodes.slice(1));
-
-			var nodeCountsPerYear = {};
-			for (var i=yearRange[0]; i<=yearRange[1]; i++) {
-				var countThisYear = yearsNest[i];
-				if (typeof countThisYear === 'undefined') {
-					nodeCountsPerYear[i] = 0;
-				} else {
-					nodeCountsPerYear[i] = countThisYear;
-				}
-			}
-			return nodeCountsPerYear;
-		}
-		newGraph.graph.nodeCountsPerYear = getNodeCountsPerYear(newGraph.nodes, yearRange);
-
-
-		return newGraph;
-	}
-
-	return {
-		prepare_egoGraphData: prepare_egoGraphData
-	};
-}());
-
-var citationVis = citationVis || {};
-
-citationVis.eventListeners = (function() {
-	// Event listeners that act across different visualization objects go here
-	
-	// function tooltipListener() {
-	// 	// Add event listener to nodes for tooltip:
-	// 	d3.selectAll('.node')
-	// 		.on('mouseover', function(d) {
-	// 			var tooltipHtml = self.makeTooltip(d);
-	// 			self.tooltip = self.tooltip
-	// 				.html(tooltipHtml)
-	// 				.style('visibility', 'visible')
-	// 				.style('border-style', 'solid')
-	// 				.style('border-color', d.color);
-	// 		})
-	// 		.on('mousemove', function() {
-	// 			self.tooltip = self.tooltip
-	// 				.style('visibility', 'visible')
-	// 				.style('top', (d3.event.pageY-10)+'px')
-	// 				.style('left', (d3.event.pageX+10)+'px');
-	// 		})
-	// 		.on('mouseout', function() {
-	// 			self.tooltip = self.tooltip.style('visibility', 'hidden'); });
-	// }
-
-	return {
-		// tooltipListener: tooltipListener
-	};
-}());
-var citationVis = citationVis || {};
-
-citationVis.lineChartData = (function() {
-	// Take in graph data and prepare it for line charts
-	
-	function getPewClassYear(graph) {
-		var egoNode = graph.nodes[0];
-		return egoNode.pew_Class;
-	}
-
-	function getFunding(graph) {
-		var egoNode = graph.nodes[0];
-		return egoNode.funding;
-	}
-
-	function cleanLinks(links) {
-		var cleanedLinks = [];
-		links.forEach(function(d) {
-			if ( (typeof d.linkToEgo != 'undefined') && (d.linkToEgo === true) ) {
-				var sourceYear = +d.sourceYear;
-				var targetYear = +d.targetYear;
-				if ( (sourceYear > 0) && (targetYear > 0) && (sourceYear >= targetYear) ) {
-					cleanedLinks.push(d);
-				}
-			}
-		});
-		return cleanedLinks;
-	}
-
-	function getYearRange(cleanedLinks) {
-		// Make sure all our data fall within the appropriate time span.
-		// The minimum year is the earliest publication by the ego author (there will likely be no citations within this year, but this chart needs to line up with the other charts).
-		// The maximum year is the last year that a paper cited one of the ego author's paper (checking to make sure it is not in the future, which would mean bad data).
-		var minYear = d3.min(cleanedLinks, function(d) { return d.targetYear>0 ? d.targetYear : null; });
-		// Get current year (using today's date):
-		var todayYear = new Date().getFullYear();
-		var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<=todayYear ? d.sourceYear : null; });
-
-		// cutoff at 2015
-		maxYear = Math.min(maxYear, 2015);
-
-		return [minYear, maxYear];
-	}
-
-	function getEmptyCountData(yearRange) {
-		var emptyCountData = [];
-		for (var i=yearRange[0]; i<=yearRange[1]; i++) {
-			emptyCountData.push({year: i, count: 0});
-		}
-		return emptyCountData;
-	}
-
-	function prepareData_allCitations(graph) {
-		// var data = {};
-		var data = {};
-		data['pew_Class'] = getPewClassYear(graph);
-		data['funding'] = getFunding(graph);
-		data['values'] = [];
-
-		var cleanedLinks = cleanLinks(graph.links);
-		var yearRange = getYearRange(cleanedLinks);
-		cleanedLinks = cleanedLinks.filter(function(d) {
-			return d.sourceYear <= yearRange[1] && d.targetYear <= yearRange[1];
-		});
-
-		// for (var i=yearRange[0]; i<=yearRange[1]; i++) {
-		// 	// data[i] = 0;
-		// 	data.push({year: i, count: 0});
-		// }
-		// cleanedLinks.forEach(function(d) {
-		// 	data[d.sourceYear]++;
-		// });
-		data.values = getEmptyCountData(yearRange);
-		cleanedLinks.forEach(function(d) {
-			var thisSourceYear = d.sourceYear;
-			var dataThisYear = data.values.filter(function(dd) { return dd.year===thisSourceYear; })[0];
-			dataThisYear.count++;
-		});
-
-		return data;
-	}
-
-	function prepareData_egoAuthorPublications(graph) {
-		var data = {};
-		data['pew_Class'] = getPewClassYear(graph);
-		data['funding'] = getFunding(graph);
-		data['values'] = [];
-
-		var cleanedLinks = cleanLinks(graph.links);
-		var yearRange = getYearRange(cleanedLinks);
-		data.values = getEmptyCountData(yearRange);
-		var egoPapers = graph.nodes[0].papers;
-		egoPapers = egoPapers.filter(function(d) {
-			return ( (d.Year >= yearRange[0]) && (d.Year <= yearRange[1]) );
-		})
-		egoPapers.forEach(function(d) {
-			var dataThisYear = data.values.filter(function(dd) { return dd.year==d.Year; })[0];
-			dataThisYear.count++;
-		});
-
-		return data;
-	}
-
-	function prepareData_authorEigenfactorSum(graph) {
-		// For each year, sum the eigenfactor (EF) of the ego author's paper's
-		var data = {};
-		data['pew_Class'] = getPewClassYear(graph);
-		data['funding'] = getFunding(graph);
-		data['values'] = [];
-
-		var cleanedLinks = cleanLinks(graph.links);
-		var yearRange = getYearRange(cleanedLinks);
-		data.values = getEmptyCountData(yearRange);
-		var egoPapers = graph.nodes[0].papers;
-		egoPapers = egoPapers.filter(function(d) {
-			return ( (d.Year >= yearRange[0]) && (d.Year <= yearRange[1]) );
-		})
-		egoPapers.forEach(function(d) {
-			var dataThisYear = data.values.filter(function(dd) { return dd.year==d.Year; })[0];
-			dataThisYear.count = dataThisYear.count + d.EF;
-		});
-
-		return data;
-	}
-
-	return {
-		prepareData_allCitations: prepareData_allCitations,
-		prepareData_egoAuthorPublications: prepareData_egoAuthorPublications,
-		prepareData_authorEigenfactorSum: prepareData_authorEigenfactorSum
-	};
-}());
-
-
-// https://css-tricks.com/snippets/javascript/get-url-variables/
-function getQueryVariable(variable)
-{
-    var query = window.location.search.substring(1);
-    var vars = query.split("&");
-    for (var i=0; i<vars.length; i++) {
-        var pair = vars[i].split("=");
-        if(pair[0] == variable) {return pair[1];}
-    }
-    return(false);
-}
-
-var citationVis = citationVis || {};
-
-citationVis.getTransitionTimePerYear= function(graph, longestYearTransitionTime) {
-	console.log(graph);
-	// This will let us vary the transition time per year
-	var transitionTimePerYear = {};
-	var emptyYearTransitionTime = 300;
-	// var longestYearTransitionTime = 4000;
-	// Set default value:
-	// http://stackoverflow.com/questions/894860/set-a-default-parameter-value-for-a-javascript-function
-	var longestYearTransitionTime = typeof longestYearTransitionTime !== 'undefined' ? longestYearTransitionTime : 4000;
-	// This scale takes the number of nodes for a given year as input
-	// and outputs the transition time, based on a threshold mapping
-	var thresholdScale = d3.scale.threshold()
-		.domain([1, 3, 10, 20, 30])
-		.range([
-				emptyYearTransitionTime,  // zero nodes
-				longestYearTransitionTime * .2,  // one or two nodes
-				longestYearTransitionTime * .5, // 3 to 9
-				longestYearTransitionTime * .7,  // 10 to 19
-				longestYearTransitionTime * .85,  // 20 to 29
-				longestYearTransitionTime  // 30+
-				]);
-	var yearRange = graph.graph.yearRange;
-	
-	// Put the transition time for each year into an object
-	for (var i=yearRange[0]; i<=yearRange[1]; i++) {
-		// transitionTimePerYear[i] = 1000;
-		transitionTimePerYear[i] = thresholdScale(graph.graph.nodeCountsPerYear[i]);
-	}
-	return transitionTimePerYear;
-};
-
-citationVis.yearTickClickEventListener = function() {
-    // Add click listeners to line chart axis tick labels (years).
-    // On click, a new destination node will be set.
-    d3.selectAll('.yearTick')
-        .on('click', function(d) {
-            // Get the year (as integer)
-            var destinationYear = this.getAttribute('data-year');
-            // Stop all transitions on nodes and links
-            d3.selectAll('.node, .link').transition().duration(0);
-
-			citationVis.egoGraphVis.newDestinationNode(destinationYear);
-        });
-};
-
-
-var citationVis = citationVis || {};
-
-citationVis.summaryStatistics = (function() {
-
-	function addSummaryStatistics(graph) {
-
-		function cleanLinks(links) {
-			var cleanedLinks = [];
-			links.forEach(function(d) {
-				if ( (typeof d.linkToEgo != 'undefined') && (d.linkToEgo === true) ) {
-					var sourceYear = +d.sourceYear;
-					var targetYear = +d.targetYear;
-					if ( (sourceYear > 0) && (targetYear > 0) && (sourceYear >= targetYear) ) {
-						cleanedLinks.push(d);
-					}
-				}
-			});
-			return cleanedLinks;
-		}
-
-		function getYearRange(links) {
-			// A lot of this code was copied from lineChartData
-			// May need to clean this up (TODO)
-
-			// Make sure all our data fall within the appropriate time span.
-			// The minimum year is the earliest publication by the ego author (there will likely be no citations within this year, but this chart needs to line up with the other charts).
-			// The maximum year is the last year that a paper cited one of the ego author's paper (checking to make sure it is not in the future, which would mean bad data).
-			var cleanedLinks = cleanLinks(links);
-			var minYear = d3.min(cleanedLinks, function(d) { return d.targetYear>0 ? d.targetYear : null; });
-			// Get current year (using today's date):
-			var todayYear = new Date().getFullYear();
-			var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<=todayYear ? d.sourceYear : null; });
-			return [minYear, maxYear];
-		}
-
-
-		function getEmptyCountData(yearRange) {
-			var emptyCountData = [];
-			for (var i=yearRange[0]; i<=yearRange[1]; i++) {
-				emptyCountData.push({year: i, count: 0});
-			}
-			return emptyCountData;
-		}
-
-		function getCitationCountsPerYear(graph) {
-			var citationCountsPerYear = getEmptyCountData(graph.graph.yearRange);
-			var cleanedLinks = cleanLinks(graph.links);
-			cleanedLinks.forEach(function(d, i) {
-				var thisSourceYear = d.sourceYear;
-				var dataThisYear = citationCountsPerYear.filter(function(dd) { return dd.year===thisSourceYear; })[0];
-				dataThisYear.count++;
-			});
-
-			return citationCountsPerYear;
-		}
-
-		graph.graph.yearRange = getYearRange(graph.links);
-		graph.graph.citationCountsPerYear = getCitationCountsPerYear(graph);
-		return graph;
-	}
-
-	return {
-		addSummaryStatistics: addSummaryStatistics
-	};
-}());
-
-
-
-// This will add the ability to change the type of domain (e.g. from category to venue) that the nodes are colored by
-// The JSON data must have the right properties (i.e. `graph.DomainsMult` and node property `DomainMult`
-// and the URL must have the query parameter "domainsMult"
-
-// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
-function getParameterByName(name, url) {
-	if (!url) url = window.location.href;
-	name = name.replace(/[\[\]]/g, "\\$&");
-    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-		results = regex.exec(url);
-	if (!results) return null;
-	if (!results[2]) return '';
-	return decodeURIComponent(results[2].replace(/\+/g, " "));
-}
-
-var citationVis = citationVis || {};
-
-$( document ).on( "initComplete", function() {
-	var egoGraphVis = citationVis.egoGraphVis;
-	var domainsMult = egoGraphVis.data.graph.DomainsMult
-	if ( (!domainsMult) || (!getParameterByName('domainsMult')) ) {
-		// in this case, exit without doing anything
-		return;
-	}
-	var $domainDropdown = $( '<div>' );
-	$domainDropdown.append( $( '<label>' ).text('Color by: ').css( 'display', 'inline' ) );
-	var domain_select = $domainDropdown.append( $( '<select>' ).attr( 'id', 'domain_select' ) );
-	$( '#mainDiv' ).prepend( $domainDropdown );
-	$.each(domainsMult, function(k, v) {
-		$( '#domain_select' ).append( $( '<option>' ).text(k) );
-		d3.select("#mainDiv").append("p")
-			.text(k)
-			.on("click", function() {switchDomain(k);});
-	});
-	$( '#domain_select' ).val("category_from_keyword");
-	$( '#domain_select' ).on( 'change', function() { switchDomain($(this).val()); });
-
-	function switchDomain(domainType) {
-		var dur = 200;
-		egoGraphVis.data.graph.Domains = domainsMult[domainType];
-		for (var i = 0, len = egoGraphVis.notEgoNodes.length; i < len; i++) {
-			var thisNode = egoGraphVis.notEgoNodes[i];
-			thisNode.DomainID = thisNode.DomainMult[domainType];
-		}
-		egoGraphVis.getDomainsThisGraph();
-		d3.selectAll(".legendItem").remove();
-		egoGraphVis.legendInit();
-		d3.selectAll(".node")
-			.each(function(d) {
-				d.DomainName = egoGraphVis.data.graph.Domains[d.DomainID];
-				for (var i=0; i<egoGraphVis.domainsThisGraph.length; i++) {
-					var thisDomain = egoGraphVis.domainsThisGraph[i].key
-					if (thisDomain==d.DomainID) {
-						// var thisColor = self.colorScheme[i];
-						var thisColor = egoGraphVis.domainsThisGraph[i].color;
-						d.color = thisColor;
-					}
-				}
-			})
-			.transition().duration(dur)
-			.attr('fill', 'white')
-			.each('end', function() {
-				d3.select(this)
-					.transition().duration(dur)
-					.attr('fill', function(d) {
-						// color the nodes based on DomainID
-						return d.color
-					})
-			})
-		d3.transition().duration(dur*2).each('end', function() {
-			egoGraphVis.revealFinalState();
-		});
-	}
-});
-
-
 // http://codereview.stackexchange.com/questions/77614/capitalize-the-first-character-of-all-words-even-when-following-a
 String.prototype.capitalize = function() {
     return this.toLowerCase().replace( /\b\w/g, function(m) {
@@ -991,6 +763,17 @@ function egoGraphVis(data) {
     // self.colorScheme.splice(0, 0, self.colorScheme.splice(1, 1)[0])
 	self.colorScheme;  // imported in importDefaultOptions below
 
+	// continuous color scheme based on jensen-shannon divergence
+	var viridis = ["#440154","#440256","#450457","#450559","#46075a","#46085c","#460a5d","#460b5e","#470d60","#470e61","#471063","#471164","#471365","#481467","#481668","#481769","#48186a","#481a6c","#481b6d","#481c6e","#481d6f","#481f70","#482071","#482173","#482374","#482475","#482576","#482677","#482878","#482979","#472a7a","#472c7a","#472d7b","#472e7c","#472f7d","#46307e","#46327e","#46337f","#463480","#453581","#453781","#453882","#443983","#443a83","#443b84","#433d84","#433e85","#423f85","#424086","#424186","#414287","#414487","#404588","#404688","#3f4788","#3f4889","#3e4989","#3e4a89","#3e4c8a","#3d4d8a","#3d4e8a","#3c4f8a","#3c508b","#3b518b","#3b528b","#3a538b","#3a548c","#39558c","#39568c","#38588c","#38598c","#375a8c","#375b8d","#365c8d","#365d8d","#355e8d","#355f8d","#34608d","#34618d","#33628d","#33638d","#32648e","#32658e","#31668e","#31678e","#31688e","#30698e","#306a8e","#2f6b8e","#2f6c8e","#2e6d8e","#2e6e8e","#2e6f8e","#2d708e","#2d718e","#2c718e","#2c728e","#2c738e","#2b748e","#2b758e","#2a768e","#2a778e","#2a788e","#29798e","#297a8e","#297b8e","#287c8e","#287d8e","#277e8e","#277f8e","#27808e","#26818e","#26828e","#26828e","#25838e","#25848e","#25858e","#24868e","#24878e","#23888e","#23898e","#238a8d","#228b8d","#228c8d","#228d8d","#218e8d","#218f8d","#21908d","#21918c","#20928c","#20928c","#20938c","#1f948c","#1f958b","#1f968b","#1f978b","#1f988b","#1f998a","#1f9a8a","#1e9b8a","#1e9c89","#1e9d89","#1f9e89","#1f9f88","#1fa088","#1fa188","#1fa187","#1fa287","#20a386","#20a486","#21a585","#21a685","#22a785","#22a884","#23a983","#24aa83","#25ab82","#25ac82","#26ad81","#27ad81","#28ae80","#29af7f","#2ab07f","#2cb17e","#2db27d","#2eb37c","#2fb47c","#31b57b","#32b67a","#34b679","#35b779","#37b878","#38b977","#3aba76","#3bbb75","#3dbc74","#3fbc73","#40bd72","#42be71","#44bf70","#46c06f","#48c16e","#4ac16d","#4cc26c","#4ec36b","#50c46a","#52c569","#54c568","#56c667","#58c765","#5ac864","#5cc863","#5ec962","#60ca60","#63cb5f","#65cb5e","#67cc5c","#69cd5b","#6ccd5a","#6ece58","#70cf57","#73d056","#75d054","#77d153","#7ad151","#7cd250","#7fd34e","#81d34d","#84d44b","#86d549","#89d548","#8bd646","#8ed645","#90d743","#93d741","#95d840","#98d83e","#9bd93c","#9dd93b","#a0da39","#a2da37","#a5db36","#a8db34","#aadc32","#addc30","#b0dd2f","#b2dd2d","#b5de2b","#b8de29","#bade28","#bddf26","#c0df25","#c2df23","#c5e021","#c8e020","#cae11f","#cde11d","#d0e11c","#d2e21b","#d5e21a","#d8e219","#dae319","#dde318","#dfe318","#e2e418","#e5e419","#e7e419","#eae51a","#ece51b","#efe51c","#f1e51d","#f4e61e","#f6e620","#f8e621","#fbe723","#fde725"];
+	var spectral8 = ['#d53e4f', '#f46d43', '#fdae61', '#fee08b', '#e6f598', '#abdda4', '#66c2a5', '#3288bd'];
+	var rainbow = ["#2c7bb6", "#00a6ca","#00ccbc","#90eb9d","#ffff8c", "#f9d057","#f29e2e","#e76818","#d7191c"]
+	self.JSDColorScale = d3.scale.linear()
+		.domain(d3.extent(self.notEgoNodes, function(d) {return d.js_div;}))
+		.range(["red", "blue"]);
+	self.ClusterDistanceColorScale = d3.scale.linear()
+		.domain(d3.extent(self.notEgoNodes, function(d) {return d.average_cluster_distance_to_center;}))
+		.range(spectral8);
+
     // Opacity values
     self.opacityVals = {
 		node: 1, 
@@ -1046,13 +829,13 @@ egoGraphVis.prototype.init = function() {
 		.attr('width', self.graphDimensions.width)
 		.attr('height', self.graphDimensions.height);
 
-	// self.tip = d3.tip()
-	// 	.attr('class', 'd3-tip')
-	// 	.style('cursor', 'default')
-	// 	.style('border-style', 'solid')
-	// 	// .style('border-color', function(d) { return d.color; })
-	// 	.style('pointer-events', 'none');
-	// // self.svg.call(self.tip);
+	self.tip = d3.tip()
+		.attr('class', 'd3-tip')
+		.style('cursor', 'default')
+		.style('border-style', 'solid')
+		// .style('border-color', function(d) { return d.color; })
+		.style('pointer-events', 'none');
+	// self.svg.call(self.tip);
 
     self.group = self.svg.append('g')
 		            .attr('class', 'graphContainer')
@@ -1077,7 +860,8 @@ egoGraphVis.prototype.init = function() {
 	// position in center
 	self.data.nodes[0].x = self.graphDimensions.width/2;
 	self.data.nodes[0].y = self.graphDimensions.height/2;
-	self.data.nodes[0].color = self.colorScheme[0];
+	// self.data.nodes[0].color = self.colorScheme[0];
+	self.data.nodes[0].color = self.JSDColorScale(0);
 	self.egoNode = self.data.nodes[0];
 	
 	// Set up a scale for Eigenfactor in order to encode size of nodes by Eigenfactor (influence)
@@ -1114,14 +898,19 @@ egoGraphVis.prototype.init = function() {
         .attr('r',1e-9)
 		.each(function(d) {
 			d.DomainName = self.data.graph.Domains[d.DomainID];
-			for (var i=0; i<self.domainsThisGraph.length; i++) {
-				var thisDomain = self.domainsThisGraph[i].key
-				if (thisDomain==d.DomainID) {
-					// var thisColor = self.colorScheme[i];
-					var thisColor = self.domainsThisGraph[i].color;
-					d.color = thisColor;
-				}
-			}
+			// for (var i=0; i<self.domainsThisGraph.length; i++) {
+			// 	var thisDomain = self.domainsThisGraph[i].key
+			// 	if (thisDomain==d.DomainID) {
+			// 		// var thisColor = self.colorScheme[i];
+			// 		var thisColor = self.domainsThisGraph[i].color;
+			// 		d.color = thisColor;
+			// 	}
+			// }
+			// d.color = self.JSDColorScale(d.js_div);
+			// d.color = self.ClusterDistanceColorScale(d.average_cluster_distance_to_center);
+
+			// d.color = self.colorScheme[d.fos_kmeans_category];
+			d.color = self.colorScheme[d.tfidf_kmeans_category];
 		})
         // Color by different categories of how similar the node's cluster is to the ego node
         .attr('fill', function(d) {
@@ -1310,6 +1099,7 @@ egoGraphVis.prototype.init = function() {
                     .attr('text-anchor', 'end')
                     .style('pointer-events', 'none')
                     .style('opacity', 1e-9)
+					.attr('id', 'egoGraphVis_yearIndicator')
 					.text(self.data.graph.yearRange[0]);
 
 	self.revealEgoNode();
@@ -1389,38 +1179,80 @@ egoGraphVis.prototype.importDefaultOptions = function(options) {
 
 };
 
-egoGraphVis.prototype.getDomainsThisGraph = function() {
-	var self = this;
+// This version of getDomainsThisGraph counts up the occurrences of the domains
+// to allow for an "other" category.
+// If we're using predetermined k-means-based categories, we don't need this.
+// So use the below version of getDomainsThisGraph instead.
+//
+// egoGraphVis.prototype.getDomainsThisGraph = function() {
+// 	var self = this;
+//
+// 	// var domains = self.data.graph.Domains;
+// 	// var domains = self.data.graph.fos_kmeans_categories;
+// 	var domains = self.data.graph.titles_kmeans_categories;
+// 	console.log(domains);
+//
+// 	var maxDomains = self.colorScheme.length;
+// 	
+// 	// self.domainsThisGraph will be an array of {key: "DomainID", values: count}
+// 	self.domainsThisGraph = d3.nest()
+// 		// .key(function(d) { return d.DomainID; })
+// 		// .key(function(d) { return d.fos_kmeans_category; })
+// 		.key(function(d) { return d.title_kmeans_category; })
+// 		.rollup(function(leaves) { return leaves.length; })
+// 		.entries(self.notEgoNodes);
+// 	// self.domainsThisGraph.sort(function(a,b) { return d3.descending(a.values, b.values); });
+// 	// Add a few more variables to the domainsThisGraph data:
+// 	for (var i=0; i<self.domainsThisGraph.length; i++) {
+// 		// var key = +self.domainsThisGraph[i].key;
+// 		var key = self.domainsThisGraph[i].key;
+// 		self.domainsThisGraph[i].DomainID = key;
+// 		// if (i<maxDomains-1) {
+// 		// 	self.domainsThisGraph[i].DomainName = domains[key];
+// 		// 	self.domainsThisGraph[i].color = self.colorScheme[i];
+// 		// } else {
+// 		// 	self.domainsThisGraph[i].DomainName = "Other";
+// 		// 	self.domainsThisGraph[i].color = self.colorScheme[maxDomains-1];
+// 		// }
+// 		self.domainsThisGraph[i].DomainName = domains[key];
+// 		self.domainsThisGraph[i].color = self.colorScheme[i];
+// 	}
+// 	console.log(self.domainsThisGraph);
+// };
 
-	var domains = self.data.graph.Domains;
-	console.log(domains);
+egoGraphVis.prototype.getDomainsThisGraph = function() {
+	// Use this version of getDomainsThisGraph if the categories are predetermined and don't need to be counted.
+	// (We don't need an "other" (miscellaneous) category
+	
+	var self = this;
 
 	var maxDomains = self.colorScheme.length;
 	
-	// self.domainsThisGraph will be an array of {key: "DomainID", values: count}
-	self.domainsThisGraph = d3.nest()
-		.key(function(d) { return d.DomainID; })
-		.rollup(function(leaves) { return leaves.length; })
-		.entries(self.notEgoNodes);
-	self.domainsThisGraph.sort(function(a,b) { return d3.descending(a.values, b.values); });
+	var domains = self.data.graph.tfidf_kmeans_categories;
+	self.domainsThisGraph = [];
 	// Add a few more variables to the domainsThisGraph data:
-	for (var i=0; i<self.domainsThisGraph.length; i++) {
-		// var key = +self.domainsThisGraph[i].key;
-		var key = self.domainsThisGraph[i].key;
-		self.domainsThisGraph[i].DomainID = key;
-		if (i<maxDomains-1) {
-			self.domainsThisGraph[i].DomainName = domains[key];
-			self.domainsThisGraph[i].color = self.colorScheme[i];
-		} else {
-			self.domainsThisGraph[i].DomainName = "Other";
-			self.domainsThisGraph[i].color = self.colorScheme[maxDomains-1];
-		}
+	for (var i=0; i<maxDomains; i++) {
+		self.domainsThisGraph.push({});
+		self.domainsThisGraph[i].DomainID = i;
+		self.domainsThisGraph[i].DomainName = domains[i];
+		self.domainsThisGraph[i].color = self.colorScheme[i];
 	}
 	console.log(self.domainsThisGraph);
 };
 
 egoGraphVis.prototype.legendInit = function() {
 	var self = this;
+
+	var misinfoLegendItemsText = [
+		'computer science, data mining, ...',
+		'sociology, social science, ...',
+		'medicine, health, ...',
+		'economics, business, ...',
+		'psychology, cognition, ...',
+		'political science, ...',
+		'biology, ecology, ...',
+		'climate change, ...',
+	];
 
 	var squareSize = self.graphDimensions.width / 70;
     var padding = squareSize / 3;
@@ -1430,21 +1262,26 @@ egoGraphVis.prototype.legendInit = function() {
         .attr('class', 'legend')
         .attr('transform', 'translate('+padding+','+padding+')');
         // .style('opacity', 1e-9);
-	console.log(self.domainsThisGraph);
+	var legendHeaderSize = squareSize;
+	self.legend.append('svg:text')
+        .attr('transform', 'translate(0, ' + legendHeaderSize + ')')
+		.attr('class', 'egoGraphVisLegendHeader')
+		.text('Categories ⓘ');
 
     var legendItem = self.legend.selectAll('g')
         .data(self.domainsThisGraph)
         .enter()
         .append('g')
         .attr('class', 'legendItem')
-		// add "other" class to last legend item
-		.classed('other', function(d) { 
-			return (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") ? true : false;
-		})
+		// // add "other" class to last legend item
+		// .classed('other', function(d) { 
+		// 	return (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") ? true : false;
+		// })
         .attr('id', function(d) {
             // return 'legendCluster' + d.cluster; })
             // Use Domain instead of cluster
-            return 'legendDomain' + d.DomainID.replace(" ", ""); })
+            // return 'legendDomain' + d.DomainID.replace(" ", ""); })
+            return 'legendDomain' + d.DomainID; })
 		.on("mouseover", function(d) {
 			d3.selectAll(".node")
 				.filter(function(dd) {
@@ -1478,22 +1315,30 @@ egoGraphVis.prototype.legendInit = function() {
         .attr('width', squareSize)
         .attr('height', squareSize)
         .attr('transform', function(d, i) {
-            return 'translate(0,' + (sqrPlusPadding * i) + ')';
+            // return 'translate(0,' + (sqrPlusPadding * i) + ')';
+            return 'translate(0,' + (legendHeaderSize + padding + sqrPlusPadding * i) + ')';
         })
         .attr('fill', function(d) {
             return d.color; });
-    legendItem.append('svg:text')
+    self.legendText = legendItem.append('svg:text')
         .attr('transform', function(d, i) {
-                return 'translate(' + (sqrPlusPadding) + ',' + (sqrPlusPadding * i) + ')';
+                return 'translate(' + (sqrPlusPadding) + ',' + (legendHeaderSize + padding + sqrPlusPadding * i) + ')';
         })
         .attr('dy', '1em')
-        .text(function(d) {
+        .text(function(d, i) {
                 // return 'Papers in category "' + d.DomainName + '" (domain ' + d.DomainID + ')';
-				if (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") {
-					return "Papers in other categories";
-				} else {
-					return 'Papers in category "' + d.DomainName + '"';
-				}
+                //
+				// if (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") {
+				// 	return "Papers in other categories";
+				// } else {
+				// 	return 'Papers in category "' + d.DomainName + '"';
+				// }
+                //
+				// return d.DomainName;
+                //
+				// return "Category " + d.DomainID;
+
+				return 'C' + i + ' (' + misinfoLegendItemsText[i] + ')';
         })
 		.style('font-size', '.9em');
 
@@ -1632,6 +1477,8 @@ egoGraphVis.prototype.addEventListeners = function() {
         .on('mouseover', function(d) {
 			d.hovered = true;
 			var hoveredItem = d3.select(this);
+			// $("#devoutput").html("<h3>" + d.js_div + "</h3>").css("color", d.color);
+
 			// self.tooltip = self.tooltip
 			// 	.html(d.tooltipHtml)
 			// 	.style('visibility', 'visible')
@@ -1700,7 +1547,7 @@ egoGraphVis.prototype.addEventListeners = function() {
 				if ( (d.hasOwnProperty('doi')) && (d.doi !== '') ) {
 					var url = 'https://doi.org/' + d.doi;
 				} else {
-					var url = 'https://academic.microsoft.com/#/detail/' + d.id;
+					var url = 'https://preview.academic.microsoft.com/paper/' + d.id;
 				}
 				window.open(url, '_blank');
 				
@@ -1937,8 +1784,8 @@ egoGraphVis.prototype.checkYear = function() {
 	// if we are on the last node, just max out the year.
 	if (self.currNodeIndex == self.data.nodes.length-1) {
 		self.currYear = self.data.graph.yearRange[1];
-		// cutoff at 2015
-		self.currYear = Math.min(self.currYear, 2015);
+		// // cutoff at 2015
+		// self.currYear = Math.min(self.currYear, 2015);
 
 		self.yearTextDisplay.text(self.currYear);
 
@@ -2087,44 +1934,6 @@ egoGraphVis.prototype.drawNode = function() {
 			// console.log(t1-t0 + "milliseconds");
 			self.animateToDestinationNode();
 			drawLinks(d);
-        // .each(function(d) {
-            // Put up annotation if a node comes from a new domain.
-            // Must satisfy the conditions:
-            // -graph paramater doAnnotations is true
-            // -the domain has not already been annotated
-            // -the domain is different than the ego node's domain
-            var thisDomain = self.domainsThisGraph.filter(function(domain) {return domain.DomainID==d.DomainID;});
-            // The above returned an array. Take the first element to get the object representing the Domain.
-            thisDomain = thisDomain[0]
-            if ( (self.doAnnotations) && (!thisDomain.alreadyAnnotated) && (thisDomain.DomainID != self.egoNode.DomainID) ) {
-                self.annotationNewCluster(d);
-                d3.select('#legendDomain' + d.DomainID)
-                    .transition().delay(1000).duration(2000)
-                    .style('opacity', 1);
-                thisDomain.alreadyAnnotated = true;
-            } // else {
-
-            // I can use else if statements for the other annotations.
-            // (or other if statements? what if one node trips two annotations?)
-
-            // var clusterSplit = d.cluster.split(':');
-            // // Put up annotation if a node comes from a new cluster
-            // // Also reveal this cluster in the legend
-            // var clusterIndex = self.clustersToAnnotate.indexOf(clusterSplit[0])
-            // if (clusterIndex > -1)
-            //         { if ( (self.graphParams.doAnnotations.value ) && ( !self.clusters[clusterIndex].alreadyAnnotated ))
-            //                 { self.annotationNewCluster(d);
-            //                 d3.select('#legendCluster' + clusterSplit[0])
-            //                         .transition().delay(1000).duration(2000)
-            //                         .style('opacity', 1);
-            //                 self.clusters[clusterIndex].alreadyAnnotated = true; } }
-
-            // Put up annotation when the highest Eigenfactor node appears
-            // Commented out because it happens too early for this paper and interferes with flow
-            //if (d.EF === d3.max(self.allNodes, function(dd) { return dd.EF; }))
-                    //{ console.log('highest EF'); self.annotationHighestEF(d); }
-
-            // else self.animateToDestinationNode();
 
         });
 };
@@ -2284,6 +2093,271 @@ egoGraphVis.prototype.revealFinalState = function() {
 
 		
 
+
+
+var citationVis = citationVis || {};
+
+citationVis.egoGraphData = (function(maxNodes) {
+	function prepare_egoGraphData(graph) {
+		for (i=0; i<graph.nodes.length; i++) {
+			graph.nodes[i].oldIdx = i;
+		}
+		var newGraph = {};
+		// Copy properties to newGraph that won't change:
+		var propsToCopy = ['graph', 'directed', 'multigraph'];
+		for (i=0; i<propsToCopy.length; i++) {
+			var prop = propsToCopy[i];
+			if (graph.hasOwnProperty(prop)) { newGraph[prop] = graph[prop]; }
+		}
+
+		newGraph.nodes = [];
+		newGraph.nodes.push(graph.nodes[0]);
+		newGraph.nodes[0].idx = 0;
+		// // this is a test:
+		// for (i=10; i<20; i++) {
+		// 	var newNode = graph.nodes[i];
+		// 	newNode.idx = newGraph.nodes.length;
+		// 	newGraph.nodes.push(newNode);
+		// }
+		var notEgoNodes = [];
+		// Filter out nodes that have year of 0
+		for (var i=1; i<graph.nodes.length; i++) {
+			// if ( (graph.nodes[i].EF > 0) && (graph.nodes[i].Year>0) ) {
+			if (graph.nodes[i].Year>0 && graph.nodes[i].Title != "") {
+				notEgoNodes.push(graph.nodes[i]);
+			}
+		}
+		// Start by randomizing the order of all the nodes
+		d3.shuffle(notEgoNodes);
+		// order descending by Eigenfactor
+		// notEgoNodes.sort(function(a,b) { return b.EF - a.EF; });
+		notEgoNodes.sort(function(a,b) { return d3.descending(a.EF, b.EF); });
+		// // I don't want to remove any nodes that have a different DomainID than the ego,
+		// // so I'll move those to the front to protect them.
+		// // ACTUALLY there are too many to do this
+		// var egoDomain = graph.nodes[0].DomainCounts[0].key;  // This is the most common domain id for the ego author's papers
+		// var c = [];
+		// for (var i=0; i<notEgoNodes.length; i++) {
+		// 	if ( notEgoNodes[i].DomainID != egoDomain ) {
+		// 		c.push(notEgoNodes[i].DomainID);
+		// 		notEgoNodes.splice(0, 0, notEgoNodes.splice(i, 1)[0]);
+		// 	}
+		// }
+		// Move papers that have a DomainID to the front
+		function DomainIDToFront(arr) {
+			var hasDomainID = [];
+			var noDomainID = [];
+			for (var i = 0, len = arr.length; i < len; i++) {
+				if ( arr[i].DomainID != 0 ) {
+					hasDomainID.push(arr[i]);
+				} else {
+					noDomainID.push(arr[i]);
+				}
+			}
+			console.log(arr);
+			var newArr = hasDomainID.concat(noDomainID);
+			console.log(newArr);
+			return newArr;
+		}
+		notEgoNodes = DomainIDToFront(notEgoNodes);
+		// for (var i = notEgoNodes.length-1; i>=0; i--) {
+		// 	if ( notEgoNodes[i].DomainID != 0 ) {
+		// 		notEgoNodes.splice(0, 0, notEgoNodes.splice(i, 1)[0]);
+		// 	}
+		// }
+		// console.log(c);
+		// Take the first n items, where n = maxNodes
+		// console.log(maxNodes);
+		if (typeof maxNodes == 'undefined') {
+			var maxNodes = 274;  // TODO: implement this better (so it's not hard coded here)
+		}
+		// var maxNodes = 5000;  // TODO: implement this better (so it's not hard coded here)
+		if (notEgoNodes.length > maxNodes) {
+			// self.allNodes = self.allNodes.slice(0, self.graphParams.maxNodes.value);
+			notEgoNodes = notEgoNodes.slice(0, maxNodes);
+		}
+        // sort by Year
+        // then sort by EF (size) so that larger nodes tend to appear first.
+        // (this somewhat reduces the problem of sending out 
+        // links to nodes that haven't appeared yet.
+        // maybe try a better solution later.)
+		notEgoNodes.sort(function(a,b) {
+			return d3.ascending(a.Year, b.Year) || d3.descending(a.EF, b.EF);
+		});
+
+		// Append these to newGraph.nodes
+		for (i=0; i<notEgoNodes.length; i++) {
+			var newNode = notEgoNodes[i];
+			newNode.idx = newGraph.nodes.length;
+			newGraph.nodes.push(newNode);
+		}
+
+		newGraph.links = recalculateLinks(newGraph.nodes, graph.links);
+
+		function recalculateLinks(nodes, links) {
+			var newLinks = [];
+			for (i=0; i<links.length; i++) {
+				// var thisSource = nodes.filter(function(d) { return d.oldIdx === links[i].source; });
+				// var thisTarget = nodes.filter(function(d) { return d.oldIdx === links[i].target; });
+				
+				// now (2018) the node id (i.e., Paper_ID) is working to identify links, instead of the node index
+				// maybe this is because of a new version of networkx?
+				var thisSource = nodes.filter(function(d) { return d.id === links[i].source; });
+				var thisTarget = nodes.filter(function(d) { return d.id === links[i].target; });
+				if ( thisSource.length>0 && thisTarget.length>0 ) {
+					if ( (thisTarget[0].nodeType === 'paper') && (thisSource[0].Year < thisTarget[0].Year) ) {
+						// exclude the link in this case (i.e. if the source year is less than the target year
+					} else {
+						var newLink = links[i];
+						newLink.source = thisSource[0].idx;
+						newLink.target = thisTarget[0].idx;
+						newLinks.push(links[i]);
+					}
+				}
+			}
+			newLinks.forEach(function(d) {
+				if ( typeof d.target != 'number' ) console.log(d);
+			});
+
+			return newLinks;
+		}
+
+		var yearRange = newGraph.graph.yearRange;
+		function getNodeCountsPerYear(nodes, yearRange) {
+			var yearsNest = d3.nest()
+				.key(function(d) { return d.Year; }).sortKeys(d3.ascending)
+				.rollup(function(leaves) { return leaves.length; })
+				// .entries(nodes.slice(1));  // all except ego node (node[0])
+				.map(nodes.slice(1));
+
+			var nodeCountsPerYear = {};
+			for (var i=yearRange[0]; i<=yearRange[1]; i++) {
+				var countThisYear = yearsNest[i];
+				if (typeof countThisYear === 'undefined') {
+					nodeCountsPerYear[i] = 0;
+				} else {
+					nodeCountsPerYear[i] = countThisYear;
+				}
+			}
+			return nodeCountsPerYear;
+		}
+		newGraph.graph.nodeCountsPerYear = getNodeCountsPerYear(newGraph.nodes, yearRange);
+
+
+		return newGraph;
+	}
+
+	return {
+		prepare_egoGraphData: prepare_egoGraphData
+	};
+}());
+
+var citationVis = citationVis || {};
+
+citationVis.eventListeners = (function() {
+	// Event listeners that act across different visualization objects go here
+	
+	// function tooltipListener() {
+	// 	// Add event listener to nodes for tooltip:
+	// 	d3.selectAll('.node')
+	// 		.on('mouseover', function(d) {
+	// 			var tooltipHtml = self.makeTooltip(d);
+	// 			self.tooltip = self.tooltip
+	// 				.html(tooltipHtml)
+	// 				.style('visibility', 'visible')
+	// 				.style('border-style', 'solid')
+	// 				.style('border-color', d.color);
+	// 		})
+	// 		.on('mousemove', function() {
+	// 			self.tooltip = self.tooltip
+	// 				.style('visibility', 'visible')
+	// 				.style('top', (d3.event.pageY-10)+'px')
+	// 				.style('left', (d3.event.pageX+10)+'px');
+	// 		})
+	// 		.on('mouseout', function() {
+	// 			self.tooltip = self.tooltip.style('visibility', 'hidden'); });
+	// }
+
+	return {
+		// tooltipListener: tooltipListener
+	};
+}());
+// This will add the ability to change the type of domain (e.g. from category to venue) that the nodes are colored by
+// The JSON data must have the right properties (i.e. `graph.DomainsMult` and node property `DomainMult`
+// and the URL must have the query parameter "domainsMult"
+
+// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+function getParameterByName(name, url) {
+	if (!url) url = window.location.href;
+	name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+		results = regex.exec(url);
+	if (!results) return null;
+	if (!results[2]) return '';
+	return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+var citationVis = citationVis || {};
+
+$( document ).on( "initComplete", function() {
+	var egoGraphVis = citationVis.egoGraphVis;
+	var domainsMult = egoGraphVis.data.graph.DomainsMult
+	if ( (!domainsMult) || (!getParameterByName('domainsMult')) ) {
+		// in this case, exit without doing anything
+		return;
+	}
+	var $domainDropdown = $( '<div>' );
+	$domainDropdown.append( $( '<label>' ).text('Color by: ').css( 'display', 'inline' ) );
+	var domain_select = $domainDropdown.append( $( '<select>' ).attr( 'id', 'domain_select' ) );
+	$( '#mainDiv' ).prepend( $domainDropdown );
+	$.each(domainsMult, function(k, v) {
+		$( '#domain_select' ).append( $( '<option>' ).text(k) );
+		d3.select("#mainDiv").append("p")
+			.text(k)
+			.on("click", function() {switchDomain(k);});
+	});
+	$( '#domain_select' ).val("category_from_keyword");
+	$( '#domain_select' ).on( 'change', function() { switchDomain($(this).val()); });
+
+	function switchDomain(domainType) {
+		var dur = 200;
+		egoGraphVis.data.graph.Domains = domainsMult[domainType];
+		for (var i = 0, len = egoGraphVis.notEgoNodes.length; i < len; i++) {
+			var thisNode = egoGraphVis.notEgoNodes[i];
+			thisNode.DomainID = thisNode.DomainMult[domainType];
+		}
+		egoGraphVis.getDomainsThisGraph();
+		d3.selectAll(".legendItem").remove();
+		egoGraphVis.legendInit();
+		d3.selectAll(".node")
+			.each(function(d) {
+				d.DomainName = egoGraphVis.data.graph.Domains[d.DomainID];
+				for (var i=0; i<egoGraphVis.domainsThisGraph.length; i++) {
+					var thisDomain = egoGraphVis.domainsThisGraph[i].key
+					if (thisDomain==d.DomainID) {
+						// var thisColor = self.colorScheme[i];
+						var thisColor = egoGraphVis.domainsThisGraph[i].color;
+						d.color = thisColor;
+					}
+				}
+			})
+			.transition().duration(dur)
+			.attr('fill', 'white')
+			.each('end', function() {
+				d3.select(this)
+					.transition().duration(dur)
+					.attr('fill', function(d) {
+						// color the nodes based on DomainID
+						return d.color
+					})
+			})
+		d3.transition().duration(dur*2).each('end', function() {
+			egoGraphVis.revealFinalState();
+		});
+	}
+});
+
+
 function lineChartByYear(data) {
 	var self = this;
 	self.data = data.values;
@@ -2341,8 +2415,10 @@ function lineChartByYear(data) {
 	self.currYear;
 	self.transitionTimePerYear;
 	self.yearRange = d3.extent(self.data, function(d) { return d.year; });
-	// cut off at 2015
-	self.yearRange[1] = Math.min(self.yearRange[1], 2015);
+	// // cut off at 2015
+	// self.yearRange[1] = Math.min(self.yearRange[1], 2015);
+	// cut off at 2017
+	self.yearRange[1] = Math.min(self.yearRange[1], 2017);
 	
 	self.fundingTime;
 	if (typeof self.pew_Class != 'undefined') {
@@ -2459,7 +2535,7 @@ lineChartByYear.prototype.init = function() {
 		.call(self.yAxis)
 		.append('text')
 		.attr('transform', 'rotate(-90)')
-		.attr('y', -self.lineChartDimensions.margin.left/2)
+		.attr('y', -self.lineChartDimensions.margin.left/2 - 6)
 		.attr('x', -(self.lineChartDimensions.height + self.lineChartDimensions.margin.top + self.lineChartDimensions.margin.bottom)/2)
 		.attr('class', 'axisLabel')
 		.text('Num citations')
@@ -2508,7 +2584,8 @@ lineChartByYear.prototype.init = function() {
 		.datum(self.data)
 		.attr('class', 'line')
 		// .style('stroke', self.graphParams.colorScheme.value[0])
-		.style('stroke', 'url(#line-gradient)')
+		// .style('stroke', 'url(#line-gradient)')
+		.style('stroke', 'black')
 		.attr('d', self.line);
 
 	self.currYearIndicator = self.svg.append('svg:line')
@@ -2756,173 +2833,151 @@ lineChartByYear.prototype.addTitle = function(title) {
 	    .text(title);
 
 };
-// var citationVis = citationVis || {};
-//
-// $( document ).on( "initComplete", {focus_id: focus_id}, function(event) {
-// 	// pass focus_id through the event data
-// 	var focus_id = event.data.focus_id;
-// 	focus_id = parseInt(focus_id)
-// 	// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
-// 	function getParameterByName(name, url) {
-// 		if (!url) url = window.location.href;
-// 		name = name.replace(/[\[\]]/g, "\\$&");
-// 		var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-// 			results = regex.exec(url);
-// 		if (!results) return null;
-// 		if (!results[2]) return '';
-// 		return decodeURIComponent(results[2].replace(/\+/g, " "));
-// 	}
-// 	// if (getParameterByName('rcvmsg') === null) return; // add "rcvmsg=1" to the URL query parameters to enable this, otherwise do nothing
-//
-// 	var egoGraphVis = citationVis.egoGraphVis;
-//
-// 	// open the timelineVis when center node is clicked
-// 	if (typeof focus_id == 'undefined' || !focus_id) {
-// 		var focus_id = getParameterByName('focusid');
-// 	}
-// 	if (focus_id) {
-// 		$( '.centerNode' ).click( function() {
-// 			var url = Flask.url_for('generate_colldata_from_collection', {'focus_id': focus_id});
-// 			window.open(url, '_blank', 'location=0');
-// 		});
-// 	}
-//
-// 	$(window).on('storage', message_receive);
-//
-// 	// https://stackoverflow.com/questions/28230845/communication-between-tabs-or-windows
-// 	// receive message
-// 	//
-// 	function message_receive(ev) 
-// 	{
-// 		if (ev.originalEvent.key!='message') return; // ignore other keys
-// 		var message = JSON.parse(ev.originalEvent.newValue);
-// 		if (!message) return; // ignore empty message or message reset
-//
-// 		// act on the message
-// 		if (message.command == 'timelineVis:paperItem:mouseover') highlightLinkedPapers(message.data.pid);
-// 		if (message.command == 'timelineVis:paperItem:mouseout') linkedPapersMouseout(message.data.pid);
-// 	}
-//
-// 	function highlightLinkedPapers(paper_id) {
-// 		var highlightedNodes = [];
-//
-// 		d3.selectAll(".node").filter(function(d) {
-// 			// return d.targetPaperIDs && d.targetPaperIDs.indexOf(paper_id) != -1;
-// 			if (d.targetPaperIDs && d.targetPaperIDs.indexOf(paper_id) != -1) {
-// 				highlightedNodes.push(d);
-// 				return true;
-// 			}
-// 		})
-// 		.classed("linkedToTimeline", true);
-//
-// 		// d3.selectAll(".link.toEgo").filter(function(d) {
-// 		d3.selectAll(".link").filter(function(d) {
-// 			return highlightedNodes.indexOf(d.source) != -1;
-// 		})
-// 		.classed("linkedToTimeline", true);
-// 	}
-//
-// 	function linkedPapersMouseout(paper_id) {
-// 		// d3.selectAll(".node").filter(function(d) {
-// 		// 	return d.targetPaperIDs && d.targetPaperIDs.indexOf(paper_id) != -1;
-// 		// })
-// 		// .classed("linkedToTimeline", false);
-// 		d3.selectAll(".linkedToTimeline").classed("linkedToTimeline", false);
-// 	}
-// });
+var citationVis = citationVis || {};
+
+citationVis.summaryStatistics = (function() {
+
+	function addSummaryStatistics(graph) {
+
+		function cleanLinks(links) {
+			var cleanedLinks = [];
+			links.forEach(function(d) {
+				if ( (typeof d.linkToEgo != 'undefined') && (d.linkToEgo === true) ) {
+					var sourceYear = +d.sourceYear;
+					var targetYear = +d.targetYear;
+					if ( (sourceYear > 0) && (targetYear > 0) && (sourceYear >= targetYear) ) {
+						cleanedLinks.push(d);
+					}
+				}
+			});
+			return cleanedLinks;
+		}
+
+		function getYearRange(links) {
+			// A lot of this code was copied from lineChartData
+			// May need to clean this up (TODO)
+
+			// Make sure all our data fall within the appropriate time span.
+			// The minimum year is the earliest publication by the ego author (there will likely be no citations within this year, but this chart needs to line up with the other charts).
+			// The maximum year is the last year that a paper cited one of the ego author's paper (checking to make sure it is not in the future, which would mean bad data).
+			var cleanedLinks = cleanLinks(links);
+			var minYear = d3.min(cleanedLinks, function(d) { return d.targetYear>0 ? d.targetYear : null; });
+			// Get current year (using today's date):
+			var todayYear = new Date().getFullYear();
+			var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<=todayYear ? d.sourceYear : null; });
+			return [minYear, maxYear];
+		}
+
+
+		function getEmptyCountData(yearRange) {
+			var emptyCountData = [];
+			for (var i=yearRange[0]; i<=yearRange[1]; i++) {
+				emptyCountData.push({year: i, count: 0});
+			}
+			return emptyCountData;
+		}
+
+		function getCitationCountsPerYear(graph) {
+			var citationCountsPerYear = getEmptyCountData(graph.graph.yearRange);
+			var cleanedLinks = cleanLinks(graph.links);
+			cleanedLinks.forEach(function(d, i) {
+				var thisSourceYear = d.sourceYear;
+				var dataThisYear = citationCountsPerYear.filter(function(dd) { return dd.year===thisSourceYear; })[0];
+				dataThisYear.count++;
+			});
+
+			return citationCountsPerYear;
+		}
+
+		graph.graph.yearRange = getYearRange(graph.links);
+		graph.graph.citationCountsPerYear = getCitationCountsPerYear(graph);
+		return graph;
+	}
+
+	return {
+		addSummaryStatistics: addSummaryStatistics
+	};
+}());
+
+
+
+// https://css-tricks.com/snippets/javascript/get-url-variables/
+function getQueryVariable(variable)
+{
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0; i<vars.length; i++) {
+        var pair = vars[i].split("=");
+        if(pair[0] == variable) {return pair[1];}
+    }
+    return(false);
+}
 
 
 
 var citationVis = citationVis || {};
 
-$( document ).on( "initComplete", function() {
-	var egoGraphVis = citationVis.egoGraphVis;
-	if (egoGraphVis.zoomable == false) {
-		return;
+citationVis.getTransitionTimePerYear= function(graph, longestYearTransitionTime) {
+	console.log(graph);
+	// This will let us vary the transition time per year
+	var transitionTimePerYear = {};
+	var emptyYearTransitionTime = 300;
+	// var longestYearTransitionTime = 4000;
+	// Set default value:
+	// http://stackoverflow.com/questions/894860/set-a-default-parameter-value-for-a-javascript-function
+	var longestYearTransitionTime = typeof longestYearTransitionTime !== 'undefined' ? longestYearTransitionTime : 4000;
+	// This scale takes the number of nodes for a given year as input
+	// and outputs the transition time, based on a threshold mapping
+	var thresholdScale = d3.scale.threshold()
+		.domain([1, 3, 10, 20, 30])
+		.range([
+				emptyYearTransitionTime,  // zero nodes
+				longestYearTransitionTime * .2,  // one or two nodes
+				longestYearTransitionTime * .5, // 3 to 9
+				longestYearTransitionTime * .7,  // 10 to 19
+				longestYearTransitionTime * .85,  // 20 to 29
+				longestYearTransitionTime  // 30+
+				]);
+	var yearRange = graph.graph.yearRange;
+	
+	// Put the transition time for each year into an object
+	for (var i=yearRange[0]; i<=yearRange[1]; i++) {
+		// transitionTimePerYear[i] = 1000;
+		transitionTimePerYear[i] = thresholdScale(graph.graph.nodeCountsPerYear[i]);
 	}
-	var zoom = egoGraphVis.zoom;
-	egoGraphVis.zoomTranslate = zoom.translate();
+	return transitionTimePerYear;
+};
 
-	egoGraphVis.checkZoom = function(d) {
-		var zoomThresholdMin = coordinates([0, 0])[1];  // minimum y value
-		var zoomThresholdMax = coordinates([egoGraphVis.graphDimensions.width, egoGraphVis.graphDimensions.height])[1];  // maximum y value
-		if (d.y < zoomThresholdMin || d.y > zoomThresholdMax) {
-			console.log(zoom.translate());
-			console.log(zoom.scale());
-			console.log(coordinates([d.x, d.y]));
-	console.log(coordinates([egoGraphVis.graphDimensions.width, egoGraphVis.graphDimensions.height]));
-	console.log(coordinates([0,0]));
-			// http://bl.ocks.org/mbostock/7ec977c95910dd026812
-			egoGraphVis.group.call(zoom.event);
+citationVis.yearTickClickEventListener = function() {
+    // Add click listeners to line chart axis tick labels (years).
+    // On click, a new destination node will be set.
+    d3.selectAll('.yearTick')
+        .on('click', function(d) {
+            // Get the year (as integer)
+            var destinationYear = this.getAttribute('data-year');
+            // Stop all transitions on nodes and links
+            d3.selectAll('.node, .link').transition().duration(0);
 
-			// Record the coordinates (in data space) of the center (in screen space).
-			var center0 = zoom.center();
-			var translate0 = zoom.translate();
-			var coordinates0 = coordinates(center0);
-			zoom.scale(zoom.scale() * .9);
+			citationVis.egoGraphVis.newDestinationNode(destinationYear);
+        });
+};
 
-			// Translate back to the center.
-			var center1 = point(coordinates0);
-			zoom.translate([translate0[0] + center0[0] - center1[0], translate0[1] + center0[1] - center1[1]]);
+function main() {
 
-			egoGraphVis.group.transition().duration(500).call(zoom.event);
-			// egoGraphVis.group.call(zoom.event);
-		}
-	};
-
-	function coordinates(point) {
-		var scale = zoom.scale();
-		var translate = zoom.translate();
-		return [(point[0] - translate[0]) / scale, (point[1] - translate[1]) / scale];
-	}
-
-	function point(coordinates) {
-		var scale = zoom.scale();
-		var translate = zoom.translate();
-		return [coordinates[0] * scale + translate[0], coordinates[1] * scale + translate[1]];
-	}
-
-	function testrecord() {
-		var t = [300, 501];
-		console.log('coordinates');
-		console.log(t);
-		console.log(coordinates(t));
-	console.log(coordinates([egoGraphVis.graphDimensions.width, egoGraphVis.graphDimensions.height]));
-	}
-
-	$( document ).on( "animationFinished", function() {
-		testrecord();
-		console.log(zoom.translate());
-		console.log(zoom.scale());
-	});
-	testrecord();
-			// // Record the coordinates (in data space) of the center (in screen space).
-			// var center0 = zoom.center();
-			// var translate0 = zoom.translate();
-			// var coordinates0 = coordinates(center0);
-			// zoom.scale(zoom.scale() * .5);
-            //
-			// // Translate back to the center.
-			// var center1 = point(coordinates0);
-			// zoom.translate([translate0[0] + center0[0] - center1[0], translate0[1] + center0[1] - center1[1]]);
-            //
-			// // egoGraphVis.group.transition().duration(200).call(zoom.event);
-			// egoGraphVis.group.call(zoom.event);
-			// testrecord();
-});
-
-function main(graph) {
-if (citationvis_data === 'ABORT') {
-	return;
-}
 
 d3.select('#mainDiv').append('p')
 	.attr("class", "loadingText")
 	.text('Loading...');
 
-
-// d3.json(citationvis_data, function(error, graph) {
-	console.log(graph);
+d3.json('nas2_mag_doi_join_network_fulldata_with_fos_names.json', function(error, graph) {
+	console.log(error);
+	if (error) {
+		var contactEmail = 'jporteno@uw.edu';
+		var errHtml = 'There was an error generating the visualization, or else data processing is still in progress. Try reloading the page later, or generating the visualization again. If the problem persists, <a href="mailto:' + contactEmail + '">contact the administrator</a>.'
+		$( '.loadingText' ).html( errHtml )
+			.css( {'color': 'red'} );
+		throw error;
+	}
 
 	// Get the most common Domain IDs for the ego author's papers
 	var domainsNest = d3.nest()
@@ -2932,6 +2987,7 @@ d3.select('#mainDiv').append('p')
 	domainsNest.sort(function(a,b) { return d3.descending(a.values, b.values); });
 	// store as a node property
 	graph.nodes[0].DomainCounts = domainsNest;
+	console.log(graph);
 	// d3.select('#infoDiv').append('p').text(graph.nodes[0].AuthorName);
 
 	var default_options = citationVis.default_options, 
@@ -2940,7 +2996,6 @@ d3.select('#mainDiv').append('p')
 	    lineChartData = citationVis.lineChartData,
 		eventListeners = citationVis.eventListeners;
 
-	console.log(default_options);
 	var options = default_options.defaults;
 	console.log(options);
 
@@ -3014,9 +3069,9 @@ d3.select('#mainDiv').append('p')
 	citationVis.yearTickClickEventListener();
 	
 	d3.select(".loadingText").remove();
+});
 // })(citationvis_data);
 }
 
 // main();
-//
 export { citationVis, egoGraphVis, lineChartByYear };

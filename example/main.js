@@ -23,17 +23,12 @@ d3.json(citationvis_data, function(error, graph) {
 });
 
 function main(graph) {
-if (citationvis_data === 'ABORT') {
-	return;
-}
+
 
 d3.select('#mainDiv').append('p')
 	.attr("class", "loadingText")
 	.text('Loading...');
 
-
-// d3.json(citationvis_data, function(error, graph) {
-	console.log(graph);
 
 	// Get the most common Domain IDs for the ego author's papers
 	var domainsNest = d3.nest()
@@ -43,6 +38,7 @@ d3.select('#mainDiv').append('p')
 	domainsNest.sort(function(a,b) { return d3.descending(a.values, b.values); });
 	// store as a node property
 	graph.nodes[0].DomainCounts = domainsNest;
+	console.log(graph);
 	// d3.select('#infoDiv').append('p').text(graph.nodes[0].AuthorName);
 
 	var default_options = citationVis.default_options, 
@@ -51,8 +47,8 @@ d3.select('#mainDiv').append('p')
 	    lineChartData = citationVis.lineChartData,
 		eventListeners = citationVis.eventListeners;
 
-	console.log(default_options);
 	var options = default_options.defaults;
+	console.log(options);
 
 	graph = summaryStatistics.addSummaryStatistics(graph);
 	citationVis.graph_data = egoGraphData.prepare_egoGraphData(graph);
@@ -105,19 +101,18 @@ d3.select('#mainDiv').append('p')
 
 	// Hack to label the publications line chart. TODO: Fix this later
 	// var pubs = d3.select(citationVis.publicationsLineChart.chartDiv[0][0]);
-	// var pubs = d3.select(citationVis.lineCharts[0].chartDiv[0][0]);
-	// var pubsAxisLabel = pubs.select('.y.axis').select('.axisLabel');
-	// pubsAxisLabel.text('Num publications');
-
+	var pubs = d3.select(citationVis.lineCharts[0].chartDiv[0][0]);
+	var pubsAxisLabel = pubs.select('.y.axis').select('.axisLabel');
+	pubsAxisLabel.text('Num publications');
 	// Hack to alter eigenfactor line chart. TODO: Fix this later
 	// citationVis.eigenfactorSumLineChart.yAxis.tickFormat(d3.format('e'));
 	citationVis.lineCharts[2].yAxis.tickFormat(d3.format('e'));
 	// var EFChart = d3.select(citationVis.eigenfactorSumLineChart.chartDiv[0][0]);
-	// var EFChart = d3.select(citationVis.lineCharts[2].chartDiv[0][0]);
-	// EFChart.select('.y.axis')
-	// 	// .call(citationVis.eigenfactorSumLineChart.yAxis)
-	// 	.call(citationVis.lineCharts[2].yAxis)
-	// 	.select('.axisLabel').text('Sum of Eigenfactor');
+	var EFChart = d3.select(citationVis.lineCharts[2].chartDiv[0][0]);
+	EFChart.select('.y.axis')
+		// .call(citationVis.eigenfactorSumLineChart.yAxis)
+		.call(citationVis.lineCharts[2].yAxis)
+		.select('.axisLabel').text('Sum of Eigenfactor');
 
 
 	// Event listeners
@@ -125,5 +120,4 @@ d3.select('#mainDiv').append('p')
 	citationVis.yearTickClickEventListener();
 	
 	d3.select(".loadingText").remove();
-// })(citationvis_data);
 }

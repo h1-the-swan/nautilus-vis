@@ -179,6 +179,13 @@ function nodeTooltips() {
 		var html = '';
 		d3.select(node).each(function(d) {
 			if ( (d.nodeType === 'paper') && (!d.updatedProps) ) {
+				if ( (typeof d.citation != "undefined") && (d.citation.length>0) ) {
+					html = bypassAjax(d);
+					if (callback != null) {
+						callback(html);
+					}
+					return html
+				}
 				$.ajax({
 					dataType: 'json',
 					url: $SCRIPT_ROOT + '/_vis_get_more_paperinfo',
@@ -198,19 +205,13 @@ function nodeTooltips() {
 						// 	self.tip.show(d, hoveredItem.node());
 						// 	// self.tip.show(d);
 						// }
-
-						var span = $( '<span>' );
-						span.append( $( '<p class="tooltip title">' ).text(d.Title) );
-						span.append( $( '<p class="tooltip authors">' ).text(d.author_str) );
-						span.append( $( '<p class="tooltip venue">' ).text(d.venue) );
-						span.append( $( '<p class="tooltip year">' ).text(d.Year) );
-						span.append( $( '<p class="tooltip domain">' ).text("Category: " + d.DomainName) );
-						d.tooltipHtml = span.html();
-						html = d.tooltipHtml;
+						
+						html = makeNodeTooltipHtml(d);
 						if (callback != null) {
 							callback(html);
 						}
-						return html;
+						return html
+
 
 					}
 				});
@@ -234,6 +235,29 @@ function nodeTooltips() {
 		});
 		return html;
 	}
+
+	function bypassAjax(d) {
+		d.updatedProps = true;
+		var html = makeNodeTooltipHtml(d);
+		return html
+	}
+
+	function makeNodeTooltipHtml(d) {
+		var span = $( '<span>' );
+		span.append( $( '<p class="tooltip title">' ).text(d.Title) );
+		span.append( $( '<p class="tooltip authors">' ).text(d.author_str) );
+		span.append( $( '<p class="tooltip venue">' ).text(d.venue) );
+		span.append( $( '<p class="tooltip year">' ).text(d.Year) );
+		// span.append( $( '<p class="tooltip domain">' ).text("Category: " + d.DomainName) );
+		span.append( $( '<p class="tooltip domain">' ).text("Categories: " + d.Field_of_study_names) );
+		// span.append( $( '<p class="tooltip js_div">' ).text("JS Divergence: " + d.js_div) );
+		// span.append( $( '<p class="tooltip avg_distance">' ).text("Average cluster distance: " + d.average_cluster_distance_to_center) );
+		// span.append( $( '<p class="tooltip fos_kmeans_category">' ).text("FOS Kmeans category: " + d.fos_kmeans_category) );
+		d.tooltipHtml = span.html();
+		var html = d.tooltipHtml;
+		return html;
+		
+	}
 }
 
 function legendTooltips() {
@@ -249,5 +273,40 @@ function legendTooltips() {
 		content: otherHtml,
 		contentAsHTML: true
 	});
-	
+
+	var headerHtml = "<p>The data underlying this visualization comes from the Microsoft Academic Graph. Each document has multiple associated Fields of Study. Here, these Fields are combined with the document's title, weighted using TF-IDF, and assigned a category using K-Means clustering. Mouse over the categories to highlight its papers, and to see more important terms.</p>";
+	$('.egoGraphVisLegendHeader').tooltipster({
+		theme: 'tooltipster-noir',
+		maxWidth: windowWidth * .5,
+		animation: null,
+		animationduration: 0,
+		delay: 0,
+		updateAnimation: null,
+		content: headerHtml,
+		contentAsHTML: true
+	});
+
+	$('.legendItem').tooltipster({
+		theme: 'tooltipster-noir',
+		maxWidth: windowWidth * .5,
+		animation: null,
+		animationduration: 0,
+		delay: 0,
+		updateAnimation: null,
+		content: '<p>Loading...</p>',
+		contentAsHTML: true,
+		functionBefore: function(instance, helper) {
+			var legendItem = d3.select(helper.origin);
+			legendItem.each(function(d) {
+				var html = "<h3>Top terms in category " + d.DomainID + ":</h3>";
+				html = html + "<ul>"
+				for (var i = 0, len = d.DomainName.length; i < len; i++) {
+					html = html + "<li>" + d.DomainName[i] + "</li>";
+				}
+				html = html + "</ul>"
+				instance.content(html);
+				return;
+			});
+		},
+	});
 }

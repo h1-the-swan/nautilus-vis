@@ -36,8 +36,10 @@ citationVis.lineChartData = (function() {
 		var todayYear = new Date().getFullYear();
 		var maxYear = d3.max(cleanedLinks, function(d) { return d.sourceYear<=todayYear ? d.sourceYear : null; });
 
-		// cutoff at 2015
-		maxYear = Math.min(maxYear, 2015);
+		// // cutoff at 2015
+		// maxYear = Math.min(maxYear, 2015);
+		// cut off at 2017
+		maxYear = Math.min(maxYear, 2017);
 
 		return [minYear, maxYear];
 	}

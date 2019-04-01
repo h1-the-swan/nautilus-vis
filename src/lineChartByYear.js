@@ -55,8 +55,10 @@ function lineChartByYear(data) {
 	self.currYear;
 	self.transitionTimePerYear;
 	self.yearRange = d3.extent(self.data, function(d) { return d.year; });
-	// cut off at 2015
-	self.yearRange[1] = Math.min(self.yearRange[1], 2015);
+	// // cut off at 2015
+	// self.yearRange[1] = Math.min(self.yearRange[1], 2015);
+	// cut off at 2017
+	self.yearRange[1] = Math.min(self.yearRange[1], 2017);
 	
 	self.fundingTime;
 	if (typeof self.pew_Class != 'undefined') {
@@ -173,7 +175,7 @@ lineChartByYear.prototype.init = function() {
 		.call(self.yAxis)
 		.append('text')
 		.attr('transform', 'rotate(-90)')
-		.attr('y', -self.lineChartDimensions.margin.left/2)
+		.attr('y', -self.lineChartDimensions.margin.left/2 - 6)
 		.attr('x', -(self.lineChartDimensions.height + self.lineChartDimensions.margin.top + self.lineChartDimensions.margin.bottom)/2)
 		.attr('class', 'axisLabel')
 		.text('Num citations')
@@ -222,7 +224,8 @@ lineChartByYear.prototype.init = function() {
 		.datum(self.data)
 		.attr('class', 'line')
 		// .style('stroke', self.graphParams.colorScheme.value[0])
-		.style('stroke', 'url(#line-gradient)')
+		// .style('stroke', 'url(#line-gradient)')
+		.style('stroke', 'black')
 		.attr('d', self.line);
 
 	self.currYearIndicator = self.svg.append('svg:line')
