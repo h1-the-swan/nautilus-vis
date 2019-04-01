@@ -829,12 +829,12 @@ egoGraphVis.prototype.init = function() {
 		.attr('width', self.graphDimensions.width)
 		.attr('height', self.graphDimensions.height);
 
-	self.tip = d3.tip()
-		.attr('class', 'd3-tip')
-		.style('cursor', 'default')
-		.style('border-style', 'solid')
-		// .style('border-color', function(d) { return d.color; })
-		.style('pointer-events', 'none');
+	// self.tip = d3.tip()
+	// 	.attr('class', 'd3-tip')
+	// 	.style('cursor', 'default')
+	// 	.style('border-style', 'solid')
+	// 	// .style('border-color', function(d) { return d.color; })
+	// 	.style('pointer-events', 'none');
 	// self.svg.call(self.tip);
 
     self.group = self.svg.append('g')
