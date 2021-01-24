@@ -550,7 +550,7 @@ function nodeTooltips() {
 		animationduration: 0,
 		delay: 0,
 		updateAnimation: null,
-		content: '<p>Loading...</p>',
+		content: '<p>Click to see details of this paper</p>',
 		contentAsHTML: true,
 		functionBefore: function(instance, helper) {
 			var tooltipHtml = ajaxPaperInfo(helper.origin, function(html) {
@@ -898,19 +898,24 @@ egoGraphVis.prototype.init = function() {
         .attr('r',1e-9)
 		.each(function(d) {
 			d.DomainName = self.data.graph.Domains[d.DomainID];
-			// for (var i=0; i<self.domainsThisGraph.length; i++) {
-			// 	var thisDomain = self.domainsThisGraph[i].key
-			// 	if (thisDomain==d.DomainID) {
-			// 		// var thisColor = self.colorScheme[i];
-			// 		var thisColor = self.domainsThisGraph[i].color;
-			// 		d.color = thisColor;
-			// 	}
-			// }
+			if (self.data.nodes[0].name === "Science Communication and Misinformation") {
+				d.color = self.colorScheme[d.tfidf_kmeans_category];
+			} else {
+				for (var i=0; i<self.domainsThisGraph.length; i++) {
+					var thisDomain = self.domainsThisGraph[i].key
+					if (thisDomain==d.DomainID) {
+						// var thisColor = self.colorScheme[i];
+						var thisColor = self.domainsThisGraph[i].color;
+						d.color = thisColor;
+					}
+				}
+			}
 			// d.color = self.JSDColorScale(d.js_div);
 			// d.color = self.ClusterDistanceColorScale(d.average_cluster_distance_to_center);
 
 			// d.color = self.colorScheme[d.fos_kmeans_category];
-			d.color = self.colorScheme[d.tfidf_kmeans_category];
+
+			// d.color = self.colorScheme[d.tfidf_kmeans_category];
 		})
         // Color by different categories of how similar the node's cluster is to the ego node
         .attr('fill', function(d) {
@@ -1184,43 +1189,43 @@ egoGraphVis.prototype.importDefaultOptions = function(options) {
 // If we're using predetermined k-means-based categories, we don't need this.
 // So use the below version of getDomainsThisGraph instead.
 //
-// egoGraphVis.prototype.getDomainsThisGraph = function() {
-// 	var self = this;
-//
-// 	// var domains = self.data.graph.Domains;
-// 	// var domains = self.data.graph.fos_kmeans_categories;
-// 	var domains = self.data.graph.titles_kmeans_categories;
-// 	console.log(domains);
-//
-// 	var maxDomains = self.colorScheme.length;
-// 	
-// 	// self.domainsThisGraph will be an array of {key: "DomainID", values: count}
-// 	self.domainsThisGraph = d3.nest()
-// 		// .key(function(d) { return d.DomainID; })
-// 		// .key(function(d) { return d.fos_kmeans_category; })
-// 		.key(function(d) { return d.title_kmeans_category; })
-// 		.rollup(function(leaves) { return leaves.length; })
-// 		.entries(self.notEgoNodes);
-// 	// self.domainsThisGraph.sort(function(a,b) { return d3.descending(a.values, b.values); });
-// 	// Add a few more variables to the domainsThisGraph data:
-// 	for (var i=0; i<self.domainsThisGraph.length; i++) {
-// 		// var key = +self.domainsThisGraph[i].key;
-// 		var key = self.domainsThisGraph[i].key;
-// 		self.domainsThisGraph[i].DomainID = key;
-// 		// if (i<maxDomains-1) {
-// 		// 	self.domainsThisGraph[i].DomainName = domains[key];
-// 		// 	self.domainsThisGraph[i].color = self.colorScheme[i];
-// 		// } else {
-// 		// 	self.domainsThisGraph[i].DomainName = "Other";
-// 		// 	self.domainsThisGraph[i].color = self.colorScheme[maxDomains-1];
-// 		// }
-// 		self.domainsThisGraph[i].DomainName = domains[key];
-// 		self.domainsThisGraph[i].color = self.colorScheme[i];
-// 	}
-// 	console.log(self.domainsThisGraph);
-// };
+egoGraphVis.prototype.getDomainsThisGraphLegacy = function() {
+	var self = this;
 
-egoGraphVis.prototype.getDomainsThisGraph = function() {
+	var domains = self.data.graph.Domains;
+	// var domains = self.data.graph.fos_kmeans_categories;
+	// var domains = self.data.graph.titles_kmeans_categories;
+	console.log(domains);
+
+	var maxDomains = self.colorScheme.length;
+	
+	// self.domainsThisGraph will be an array of {key: "DomainID", values: count}
+	self.domainsThisGraph = d3.nest()
+		.key(function(d) { return d.DomainID; })
+		// .key(function(d) { return d.fos_kmeans_category; })
+		// .key(function(d) { return d.title_kmeans_category; })
+		.rollup(function(leaves) { return leaves.length; })
+		.entries(self.notEgoNodes);
+	// self.domainsThisGraph.sort(function(a,b) { return d3.descending(a.values, b.values); });
+	// Add a few more variables to the domainsThisGraph data:
+	for (var i=0; i<self.domainsThisGraph.length; i++) {
+		// var key = +self.domainsThisGraph[i].key;
+		var key = self.domainsThisGraph[i].key;
+		self.domainsThisGraph[i].DomainID = key;
+		if (i<maxDomains-1) {
+			self.domainsThisGraph[i].DomainName = domains[key];
+			self.domainsThisGraph[i].color = self.colorScheme[i];
+		} else {
+			self.domainsThisGraph[i].DomainName = "Other";
+			self.domainsThisGraph[i].color = self.colorScheme[maxDomains-1];
+		}
+		// self.domainsThisGraph[i].DomainName = domains[key];
+		// self.domainsThisGraph[i].color = self.colorScheme[i];
+	}
+	console.log(self.domainsThisGraph);
+};
+
+egoGraphVis.prototype.getDomainsThisGraphTfidf = function() {
 	// Use this version of getDomainsThisGraph if the categories are predetermined and don't need to be counted.
 	// (We don't need an "other" (miscellaneous) category
 	
@@ -1239,6 +1244,16 @@ egoGraphVis.prototype.getDomainsThisGraph = function() {
 	}
 	console.log(self.domainsThisGraph);
 };
+
+egoGraphVis.prototype.getDomainsThisGraph = function() {
+	var self = this;
+	var domains = self.data.graph.tfidf_kmeans_categories;
+	if (typeof domains === 'undefined') {
+		self.getDomainsThisGraphLegacy();
+	} else {
+		self.getDomainsThisGraphTfidf();
+	}
+}
 
 egoGraphVis.prototype.legendInit = function() {
 	var self = this;
@@ -1338,7 +1353,15 @@ egoGraphVis.prototype.legendInit = function() {
                 //
 				// return "Category " + d.DomainID;
 
-				return 'C' + i + ' (' + misinfoLegendItemsText[i] + ')';
+				if (self.data.nodes[0].name === "Science Communication and Misinformation") {
+					return 'C' + i + ' (' + misinfoLegendItemsText[i] + ')';
+				} else {
+					if (d.DomainID != 0 && d.DomainName.toLowerCase()=="other") {
+						return "Papers in other categories";
+					} else {
+						return 'Papers in category "' + d.DomainName + '"';
+					}
+				}
         })
 		.style('font-size', '.9em');
 
@@ -1547,7 +1570,7 @@ egoGraphVis.prototype.addEventListeners = function() {
 				if ( (d.hasOwnProperty('doi')) && (d.doi !== '') ) {
 					var url = 'https://doi.org/' + d.doi;
 				} else {
-					var url = 'https://preview.academic.microsoft.com/paper/' + d.id;
+					var url = 'https://academic.microsoft.com/paper/' + d.id;
 				}
 				window.open(url, '_blank');
 				
@@ -2193,6 +2216,9 @@ citationVis.egoGraphData = (function(maxNodes) {
 		}
 
 		newGraph.links = recalculateLinks(newGraph.nodes, graph.links);
+		if (!newGraph.links.length) {
+			newGraph.links = recalculateLinksLegacy(newGraph.nodes, graph.links);
+		}
 
 		function recalculateLinks(nodes, links) {
 			var newLinks = [];
@@ -2222,6 +2248,26 @@ citationVis.egoGraphData = (function(maxNodes) {
 			return newLinks;
 		}
 
+		function recalculateLinksLegacy(nodes, links) {
+			var newLinks = [];
+			for (i=0; i<links.length; i++) {
+				var thisSource = nodes.filter(function(d) { return d.oldIdx === links[i].source; });
+				var thisTarget = nodes.filter(function(d) { return d.oldIdx === links[i].target; });
+				
+				if ( thisSource.length>0 && thisTarget.length>0 ) {
+					if ( (thisTarget[0].nodeType === 'paper') && (thisSource[0].Year < thisTarget[0].Year) ) {
+						// exclude the link in this case (i.e. if the source year is less than the target year
+					} else {
+						var newLink = links[i];
+						newLink.source = thisSource[0].idx;
+						newLink.target = thisTarget[0].idx;
+						newLinks.push(links[i]);
+					}
+				}
+			}
+			return newLinks;
+		}
+
 		var yearRange = newGraph.graph.yearRange;
 		function getNodeCountsPerYear(nodes, yearRange) {
 			var yearsNest = d3.nest()
@@ -2244,6 +2290,7 @@ citationVis.egoGraphData = (function(maxNodes) {
 		newGraph.graph.nodeCountsPerYear = getNodeCountsPerYear(newGraph.nodes, yearRange);
 
 
+		console.log(newGraph);
 		return newGraph;
 	}
 
